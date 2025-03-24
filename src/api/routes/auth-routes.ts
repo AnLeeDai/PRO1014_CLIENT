@@ -17,10 +17,21 @@ export type RegisterData = {
   address: string;
 };
 
+export type ForgotPasswordData = {
+  email: string;
+  new_password: string;
+};
+
 export const login = (data: LoginData): Promise<AxiosResponse<any>> => {
-  return axiosInstance.post("public.php?request=post-login", data);
+  return axiosInstance.post("?request=post-login", data);
 };
 
 export const register = (data: RegisterData): Promise<AxiosResponse<any>> => {
-  return axiosInstance.post("public.php?request=post-register", data);
+  return axiosInstance.post("?request=post-register", data);
+};
+
+export const forgotPassword = (
+  data: ForgotPasswordData,
+): Promise<AxiosResponse<any>> => {
+  return axiosInstance.post("?request=post-forgot-password", data);
 };

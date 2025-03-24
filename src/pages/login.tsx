@@ -17,12 +17,15 @@ import PasswordInput from "@/components/password-input";
 import useLogin from "@/hooks/api/useLogin";
 import { siteConfig } from "@/config/site";
 import AuthLayout from "@/layouts/auth";
+import { emailRegex, passwordRegex } from "@/constants/validate";
 
 export default function LoginPage() {
   const [isError, setIsError] = useState<{
     email?: string;
     password?: string;
   }>({});
+
+  const [isRemember, setIsRemember] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
@@ -36,8 +39,12 @@ export default function LoginPage() {
     },
 
     onSuccess: (data) => {
-      // save data to local storage
-      localStorage.setItem("user", JSON.stringify(data.data));
+      // save user data
+      if (isRemember) {
+        localStorage.setItem("user", JSON.stringify(data));
+      }
+
+      sessionStorage.setItem("user", JSON.stringify(data));
 
       // redirect
       navigate(siteConfig.route.home);
@@ -49,42 +56,46 @@ export default function LoginPage() {
     currentTarget: HTMLFormElement | undefined;
   }) => {
     e.preventDefault();
+    if (!e.currentTarget) return;
+
     let formData = Object.fromEntries(new FormData(e.currentTarget));
 
     let data = {
       email: formData.email as string,
       password: formData.password as string,
+      remember: formData.remember as string,
     };
 
+    const errors: Record<string, string> = {};
+
+    // Email validation
     if (!data.email) {
-      validateEmail(data.email);
+      errors.email = "Email không được để trống";
+    } else if (!emailRegex.test(data.email)) {
+      errors.email = "Email không hợp lệ";
+    }
 
-      return;
-    } else if (!data.password) {
-      validatePassword(data.password);
+    // Password validation
+    if (!data.password) {
+      errors.password = "Mật khẩu không được để trống";
+    } else if (!passwordRegex.test(data.password)) {
+      errors.password =
+        "Mật khẩu phải có ít nhất 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setIsError(errors);
 
       return;
     }
 
-    // call api login
+    // Remember me
+    if (data.remember === "") {
+      setIsRemember(true);
+    }
+
+    // Call api
     mutate(data);
-  };
-
-  const validateEmail = (value: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(value)) {
-      setIsError({ email: "Email không hợp lệ" });
-    }
-  };
-
-  const validatePassword = (value: string) => {
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{6,}$/;
-
-    if (!passwordRegex.test(value)) {
-      setIsError({ password: "Mật khẩu không hợp lệ" });
-    }
   };
 
   return (
@@ -125,13 +136,13 @@ export default function LoginPage() {
             />
 
             <div className="flex w-full items-center justify-between px-1 py-2">
-              <Checkbox defaultSelected name="remember" size="sm">
+              <Checkbox defaultSelected name="remember" size="md">
                 Ghi nhớ tài khoản
               </Checkbox>
               <Link
                 className="text-default-500"
                 href={siteConfig.route.forgotPassword}
-                size="sm"
+                size="md"
               >
                 Quên mật khẩu?
               </Link>

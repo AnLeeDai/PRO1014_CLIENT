@@ -7,24 +7,19 @@ import { AxiosResponse } from "axios";
 
 import { register, RegisterData } from "@/api/routes/auth-routes";
 
-type RegisterDataRes = {
+type Res = {
   success: boolean;
   message: string;
 };
 
 export default function useRegister(
   options?: UseMutationOptions<
-    AxiosResponse<RegisterDataRes>,
+    AxiosResponse<Res>,
     Error,
     RegisterData,
     unknown
   >,
-): UseMutationResult<
-  AxiosResponse<RegisterDataRes>,
-  Error,
-  RegisterData,
-  unknown
-> {
+): UseMutationResult<AxiosResponse<Res>, Error, RegisterData, unknown> {
   return useMutation({
     mutationKey: ["register"],
     mutationFn: (registerData: RegisterData) => register(registerData),

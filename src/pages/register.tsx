@@ -16,6 +16,12 @@ import PasswordInput from "@/components/password-input";
 import { siteConfig } from "@/config/site";
 import AuthLayout from "@/layouts/auth";
 import useRegister from "@/hooks/api/useRegister";
+import {
+  emailRegex,
+  passwordRegex,
+  phoneNumRegex,
+  usernameRegex,
+} from "@/constants/validate";
 
 export default function RegisterPage() {
   const [isError, setIsError] = useState<{
@@ -24,6 +30,7 @@ export default function RegisterPage() {
     full_name?: string;
     password?: string;
     password_confirm?: string;
+    phone_number?: string;
   }>({});
 
   const navigate = useNavigate();
@@ -38,6 +45,11 @@ export default function RegisterPage() {
     },
 
     onSuccess: () => {
+      addToast({
+        title: "Đăng ký thành công",
+        color: "success",
+      });
+
       // redirect
       navigate(siteConfig.route.login);
     },
@@ -48,6 +60,8 @@ export default function RegisterPage() {
     currentTarget: HTMLFormElement | undefined;
   }) => {
     e.preventDefault();
+    if (!e.currentTarget) return;
+
     let formData = Object.fromEntries(new FormData(e.currentTarget));
 
     let data = {
@@ -60,66 +74,56 @@ export default function RegisterPage() {
       password_confirm: formData.password_confirm as string,
     };
 
+    const errors: Record<string, string> = {};
+
+    // Username
     if (!data.username) {
-      const usernameRegex = /^[a-zA-Z0-9]{6,}$/;
-
-      if (!usernameRegex.test(data.username)) {
-        setIsError({
-          username:
-            "Tên đăng nhập phải có ít nhất 6 ký tự, chỉ chứa chữ cái và số",
-        });
-
-        return;
-      }
+      errors.username = "Tên đăng nhập không được để trống";
+    } else if (!usernameRegex.test(data.username)) {
+      errors.username =
+        "Tên đăng nhập phải có ít nhất 6 ký tự, chỉ chứa chữ cái và số";
     }
 
+    // Full name
     if (!data.full_name) {
-      setIsError({ full_name: "Họ và tên không được để trống" });
-
-      return;
+      errors.full_name = "Họ và tên không được để trống";
     }
 
+    // Email
+    if (!data.email) {
+      errors.email = "Email không được để trống";
+    } else if (!emailRegex.test(data.email)) {
+      errors.email = "Email không hợp lệ";
+    }
+
+    // Phone number
+    if (data.phone_number && !phoneNumRegex.test(data.phone_number)) {
+      errors.phone_number = "Số điện thoại không hợp lệ";
+    }
+
+    // Password
     if (!data.password) {
-      setIsError({ password: "Mật khẩu không được để trống" });
-
-      return;
+      errors.password = "Mật khẩu không được để trống";
+    } else if (!passwordRegex.test(data.password)) {
+      errors.password =
+        "Mật khẩu phải có ít nhất 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt";
     }
 
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{6,}$/;
-
-    if (!passwordRegex.test(data.password)) {
-      setIsError({
-        password:
-          "Mật khẩu phải có ít nhất 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt",
-      });
-
-      return;
-    }
-
+    // Confirm password
     if (!data.password_confirm) {
-      setIsError({ password_confirm: "Vui lòng nhập lại mật khẩu" });
+      errors.password_confirm = "Vui lòng nhập lại mật khẩu";
+    } else if (data.password !== data.password_confirm) {
+      errors.password_confirm = "Mật khẩu không khớp";
+    }
+
+    // Nếu có lỗi thì set và dừng submit
+    if (Object.keys(errors).length > 0) {
+      setIsError(errors);
 
       return;
     }
 
-    if (data.password !== data.password_confirm) {
-      setIsError({ password_confirm: "Mật khẩu không khớp" });
-
-      return;
-    }
-
-    if (data.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (!emailRegex.test(data.email)) {
-        setIsError({ email: "Email không hợp lệ" });
-
-        return;
-      }
-    }
-
-    // call api register
+    // call api
     mutate(data);
   };
 
@@ -139,7 +143,7 @@ export default function RegisterPage() {
 
         <CardBody>
           <Form
-            className="space-y-4"
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
             validationBehavior="aria"
             validationErrors={isError}
             onSubmit={handleSubmitForm}
@@ -148,45 +152,34 @@ export default function RegisterPage() {
               isRequired
               label="Tên đăng nhập"
               name="username"
-              size="md"
               type="text"
             />
-
+            <Input isRequired label="Họ và tên" name="full_name" type="text" />
+            <Input isRequired label="Email" name="email" type="email" />
+            <Input label="Số điện thoại" name="phone_number" type="tel" />
             <Input
-              isRequired
-              label="Họ và tên"
-              name="full_name"
-              size="md"
+              className="col-span-1 md:col-span-2"
+              label="Địa chỉ"
+              name="address"
               type="text"
             />
-
-            <Input label="Email" name="email" size="md" type="email" />
-
-            <Input
-              label="Số điện thoại"
-              name="phone_number"
-              size="md"
-              type="tel"
-            />
-
-            <Input label="Địa chỉ" name="address" size="md" type="text" />
 
             <PasswordInput
               isRequired
+              className="col-span-1 md:col-span-2"
               label="Mật khẩu"
               name="password"
-              size="md"
             />
 
             <PasswordInput
               isRequired
+              className="col-span-1 md:col-span-2"
               label="Nhập lại mật khẩu"
               name="password_confirm"
-              size="md"
             />
 
             <Button
-              className="w-full"
+              className="col-span-1 md:col-span-2"
               color="primary"
               isLoading={isPending}
               size="lg"

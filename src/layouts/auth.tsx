@@ -4,7 +4,7 @@ interface IAuthLayoutProps {
 
 export default function AuthLayout({ children }: IAuthLayoutProps) {
   return (
-    <div className="flex flex-col justify-center items-center h-screen">
+    <div className="min-h-screen flex items-center justify-center px-4">
       <main className="mx-auto">{children}</main>
     </div>
   );
