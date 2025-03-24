@@ -7,7 +7,7 @@ import { AxiosResponse } from "axios";
 
 import { login, LoginData } from "@/api/routes/auth-routes";
 
-type LoginDataRes = {
+type Res = {
   success: boolean;
   message: string;
   data: {
@@ -21,13 +21,8 @@ type LoginDataRes = {
 };
 
 export default function useLogin(
-  options?: UseMutationOptions<
-    AxiosResponse<LoginDataRes>,
-    Error,
-    LoginData,
-    unknown
-  >,
-): UseMutationResult<AxiosResponse<LoginDataRes>, Error, LoginData, unknown> {
+  options?: UseMutationOptions<AxiosResponse<Res>, Error, LoginData, unknown>,
+): UseMutationResult<AxiosResponse<Res>, Error, LoginData, unknown> {
   return useMutation({
     mutationKey: ["login"],
     mutationFn: (loginData: LoginData) => login(loginData),
