@@ -18,12 +18,15 @@ import useLogin from "@/hooks/api/useLogin";
 import { siteConfig } from "@/config/site";
 import AuthLayout from "@/layouts/auth";
 import { emailRegex, passwordRegex } from "@/constants/validate";
+import { userStore } from "@/zustand/user-store";
 
 export default function LoginPage() {
   const [isError, setIsError] = useState<{
     email?: string;
     password?: string;
   }>({});
+
+  const reloadUser = userStore((state) => state.reloadUser);
 
   const [isRemember, setIsRemember] = useState<boolean>(false);
 
@@ -41,10 +44,13 @@ export default function LoginPage() {
     onSuccess: (data) => {
       // save user data
       if (isRemember) {
-        localStorage.setItem("user", JSON.stringify(data));
+        localStorage.setItem("user", JSON.stringify(data.data));
+      } else {
+        sessionStorage.setItem("user", JSON.stringify(data.data));
       }
 
-      sessionStorage.setItem("user", JSON.stringify(data));
+      // reload user data
+      reloadUser();
 
       // redirect
       navigate(siteConfig.route.home);

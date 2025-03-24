@@ -1,21 +1,18 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Vite + HeroUI",
-  description: "Make beautiful websites regardless of your design experience.",
+  name: "PRO 1014",
+  title: "PRO 1014 - Điện thoại, Laptop, Phụ kiện chính hãng",
+  description: "PRO 1014 - Điện thoại, Laptop, Phụ kiện chính hãng",
+  keywords: "PRO 1014, điện thoại, laptop, phụ kiện, chính hãng",
 
   route: {
-    home: "/",
     login: "/login",
     register: "/register",
     forgotPassword: "/forgot-password",
-  },
-
-  links: {
-    github: "https://github.com/frontio-ai/heroui",
-    twitter: "https://twitter.com/hero_ui",
-    docs: "https://heroui.com",
-    discord: "https://discord.gg/9b6yyZKmH4",
-    sponsor: "https://patreon.com/jrgarciadev",
+    home: "/",
+    phone: "/phone",
+    laptop: "/laptop",
+    accessories: "/accessories",
   },
 };
