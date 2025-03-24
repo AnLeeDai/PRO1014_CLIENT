@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
 
   const [isStep, setIsStep] = useState<"start" | "final">("start");
 
-  const { mutate } = useForgotPassword({
+  const { mutate, isPending } = useForgotPassword({
     onError: (error) => {
       addToast({
         title: "Gửi yêu cầu đổi mật khẩu thất bại",
@@ -129,6 +129,7 @@ export default function ForgotPasswordPage() {
               <Button
                 className="w-full"
                 color="primary"
+                isLoading={isPending}
                 size="lg"
                 type="submit"
               >
