@@ -43,14 +43,12 @@ export default function RegisterPage() {
         color: "danger",
       });
     },
-
     onSuccess: () => {
       addToast({
         title: "Đăng ký thành công",
         color: "success",
       });
 
-      // redirect
       navigate(siteConfig.route.login);
     },
   });
@@ -63,7 +61,6 @@ export default function RegisterPage() {
     if (!e.currentTarget) return;
 
     let formData = Object.fromEntries(new FormData(e.currentTarget));
-
     let data = {
       username: formData.username as string,
       full_name: formData.full_name as string,
@@ -76,7 +73,6 @@ export default function RegisterPage() {
 
     const errors: Record<string, string> = {};
 
-    // Username
     if (!data.username) {
       errors.username = "Tên đăng nhập không được để trống";
     } else if (!usernameRegex.test(data.username)) {
@@ -84,24 +80,20 @@ export default function RegisterPage() {
         "Tên đăng nhập phải có ít nhất 6 ký tự, chỉ chứa chữ cái và số";
     }
 
-    // Full name
     if (!data.full_name) {
       errors.full_name = "Họ và tên không được để trống";
     }
 
-    // Email
     if (!data.email) {
       errors.email = "Email không được để trống";
     } else if (!emailRegex.test(data.email)) {
       errors.email = "Email không hợp lệ";
     }
 
-    // Phone number
     if (data.phone_number && !phoneNumRegex.test(data.phone_number)) {
       errors.phone_number = "Số điện thoại không hợp lệ";
     }
 
-    // Password
     if (!data.password) {
       errors.password = "Mật khẩu không được để trống";
     } else if (!passwordRegex.test(data.password)) {
@@ -109,28 +101,25 @@ export default function RegisterPage() {
         "Mật khẩu phải có ít nhất 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt";
     }
 
-    // Confirm password
     if (!data.password_confirm) {
       errors.password_confirm = "Vui lòng nhập lại mật khẩu";
     } else if (data.password !== data.password_confirm) {
       errors.password_confirm = "Mật khẩu không khớp";
     }
 
-    // Nếu có lỗi thì set và dừng submit
     if (Object.keys(errors).length > 0) {
       setIsError(errors);
 
       return;
     }
 
-    // call api
     mutate(data);
   };
 
   return (
     <AuthLayout>
       <Card
-        className="w-[500px]"
+        className="w-[100%] lg:w-[50%] mx-auto"
         classNames={{
           header: "p-6",
           body: "p-6",
@@ -191,7 +180,7 @@ export default function RegisterPage() {
         </CardBody>
 
         <CardFooter>
-          <p className="text-center w-full">
+          <p className="text-center text-sm sm:text-base w-full">
             Đã có tài khoản?{" "}
             <Link className="text-primary" href={siteConfig.route.login}>
               Đăng nhập ngay

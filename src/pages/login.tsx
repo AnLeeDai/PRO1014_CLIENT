@@ -27,17 +27,14 @@ export default function LoginPage() {
   const [isRemember, setIsRemember] = useState<boolean>(false);
 
   const { setUserData, setUserStorageType } = useAuthUserStore();
-
   const navigate = useNavigate();
 
   const { mutate, isPending } = useLogin({
     onSuccess: (data) => {
       setUserStorageType(isRemember ? "localStorage" : "sessionStorage");
       setUserData(data.data);
-
       navigate(siteConfig.route.home);
     },
-
     onError: (error) => {
       addToast({
         title: "Đăng nhập thất bại",
@@ -47,7 +44,6 @@ export default function LoginPage() {
     },
   });
 
-  // 5. Xử lý form
   const handleSubmitForm = (e: {
     preventDefault: () => void;
     currentTarget: HTMLFormElement | undefined;
@@ -64,14 +60,12 @@ export default function LoginPage() {
 
     const errors: Record<string, string> = {};
 
-    // Email validation
     if (!data.email) {
       errors.email = "Email không được để trống";
     } else if (!emailRegex.test(data.email)) {
       errors.email = "Email không hợp lệ";
     }
 
-    // Password validation
     if (!data.password) {
       errors.password = "Mật khẩu không được để trống";
     } else if (!passwordRegex.test(data.password)) {
@@ -85,19 +79,17 @@ export default function LoginPage() {
       return;
     }
 
-    // Remember me
     if (data.remember === "") {
       setIsRemember(true);
     }
 
-    // Gọi api
     mutate(data);
   };
 
   return (
     <AuthLayout>
       <Card
-        className="w-[500px]"
+        className="w-[100%] lg:w-[40%] mx-auto"
         classNames={{
           header: "p-6",
           body: "p-6",
@@ -112,7 +104,7 @@ export default function LoginPage() {
 
         <CardBody>
           <Form
-            className="space-y-4"
+            className="space-y-5"
             validationBehavior="aria"
             validationErrors={isError}
             onSubmit={handleSubmitForm}
@@ -131,14 +123,14 @@ export default function LoginPage() {
               size="md"
             />
 
-            <div className="flex w-full items-center justify-between px-1 py-2">
+            <div className="flex w-full flex-wrap gap-3 items-center justify-between px-1 py-2">
               <Checkbox defaultSelected name="remember" size="md">
                 Ghi nhớ tài khoản
               </Checkbox>
+
               <Link
-                className="text-default-500"
+                className="text-default-500 text-sm"
                 href={siteConfig.route.forgotPassword}
-                size="md"
               >
                 Quên mật khẩu?
               </Link>
@@ -157,7 +149,7 @@ export default function LoginPage() {
         </CardBody>
 
         <CardFooter>
-          <p className="text-center w-full">
+          <p className="text-center text-sm sm:text-base w-full">
             Chưa có tài khoản?{" "}
             <Link className="text-primary" href={siteConfig.route.register}>
               Đăng ký ngay
