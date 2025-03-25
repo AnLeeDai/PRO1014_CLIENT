@@ -7,6 +7,9 @@ import LaptopPage from "./pages/laptop";
 import { siteConfig } from "./config/site";
 import PhonePage from "./pages/phone";
 import AccessoriesPage from "./pages/accessories";
+import CartPage from "./pages/cart";
+import ProfilePage from "./pages/profile";
+import HistoryPage from "./pages/history";
 
 import IndexPage from "@/pages/index";
 
@@ -26,6 +29,9 @@ function App() {
         element={<AccessoriesPage />}
         path={siteConfig.route.accessories}
       />
+      <Route element={<CartPage />} path={siteConfig.route.cart} />
+      <Route element={<ProfilePage />} path={siteConfig.route.profile} />
+      <Route element={<HistoryPage />} path={siteConfig.route.history} />
     </Routes>
   );
 }

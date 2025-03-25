@@ -2,12 +2,14 @@ import { AxiosResponse } from "axios";
 
 import axiosInstance from "../axiosInstance";
 
-export type LoginData = {
+import { APIResponse } from "@/types/api-response";
+
+export interface LoginData {
   email: string;
   password: string;
-};
+}
 
-export type RegisterData = {
+export interface RegisterData {
   username: string;
   password: string;
   password_confirm: string;
@@ -15,23 +17,31 @@ export type RegisterData = {
   email: string;
   phone_number: string;
   address: string;
-};
+}
 
-export type ForgotPasswordData = {
+export interface ForgotPasswordData {
   email: string;
   new_password: string;
-};
+}
 
-export const login = (data: LoginData): Promise<AxiosResponse<any>> => {
-  return axiosInstance.post("?request=post-login", data);
-};
+// login
+export const login = (
+  data: LoginData,
+): Promise<AxiosResponse<APIResponse<any>>> =>
+  axiosInstance.post("?request=post-login", data);
 
-export const register = (data: RegisterData): Promise<AxiosResponse<any>> => {
-  return axiosInstance.post("?request=post-register", data);
-};
+// register
+export const register = (
+  data: RegisterData,
+): Promise<AxiosResponse<APIResponse<any>>> =>
+  axiosInstance.post("?request=post-register", data);
 
+// forgot password
 export const forgotPassword = (
   data: ForgotPasswordData,
-): Promise<AxiosResponse<any>> => {
-  return axiosInstance.post("?request=post-forgot-password", data);
-};
+): Promise<AxiosResponse<APIResponse<any>>> =>
+  axiosInstance.post("?request=post-forgot-password", data);
+
+// logout
+export const logout = (): Promise<APIResponse> =>
+  axiosInstance.post("?request=post-logout");

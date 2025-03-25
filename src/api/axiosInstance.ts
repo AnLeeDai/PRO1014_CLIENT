@@ -1,7 +1,10 @@
 import axios, { AxiosError } from "axios";
 
+const baseURL = import.meta.env.VITE_API_BASE_URL;
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost/source_code/PRO1014/server/routes/",
+  baseURL: baseURL || "http://localhost/source_code/PRO1014/server/routes/",
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },

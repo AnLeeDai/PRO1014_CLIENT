@@ -14,5 +14,8 @@ export const siteConfig = {
     phone: "/phone",
     laptop: "/laptop",
     accessories: "/accessories",
+    cart: "/cart",
+    profile: "/profile",
+    history: "/history",
   },
 };
