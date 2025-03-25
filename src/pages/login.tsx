@@ -18,21 +18,26 @@ import useLogin from "@/hooks/api/useLogin";
 import { siteConfig } from "@/config/site";
 import AuthLayout from "@/layouts/auth";
 import { emailRegex, passwordRegex } from "@/constants/validate";
-import { userStore } from "@/zustand/user-store";
+import { useAuthUserStore } from "@/zustand";
 
 export default function LoginPage() {
-  const [isError, setIsError] = useState<{
-    email?: string;
-    password?: string;
-  }>({});
-
-  const reloadUser = userStore((state) => state.reloadUser);
-
+  const [isError, setIsError] = useState<{ email?: string; password?: string }>(
+    {},
+  );
   const [isRemember, setIsRemember] = useState<boolean>(false);
+
+  const { setUserData, setUserStorageType } = useAuthUserStore();
 
   const navigate = useNavigate();
 
   const { mutate, isPending } = useLogin({
+    onSuccess: (data) => {
+      setUserStorageType(isRemember ? "localStorage" : "sessionStorage");
+      setUserData(data.data);
+
+      navigate(siteConfig.route.home);
+    },
+
     onError: (error) => {
       addToast({
         title: "Đăng nhập thất bại",
@@ -40,23 +45,9 @@ export default function LoginPage() {
         color: "danger",
       });
     },
-
-    onSuccess: (data) => {
-      // save user data
-      if (isRemember) {
-        localStorage.setItem("user", JSON.stringify(data.data));
-      } else {
-        sessionStorage.setItem("user", JSON.stringify(data.data));
-      }
-
-      // reload user data
-      reloadUser();
-
-      // redirect
-      navigate(siteConfig.route.home);
-    },
   });
 
+  // 5. Xử lý form
   const handleSubmitForm = (e: {
     preventDefault: () => void;
     currentTarget: HTMLFormElement | undefined;
@@ -64,9 +55,8 @@ export default function LoginPage() {
     e.preventDefault();
     if (!e.currentTarget) return;
 
-    let formData = Object.fromEntries(new FormData(e.currentTarget));
-
-    let data = {
+    const formData = Object.fromEntries(new FormData(e.currentTarget));
+    const data = {
       email: formData.email as string,
       password: formData.password as string,
       remember: formData.remember as string,
@@ -100,7 +90,7 @@ export default function LoginPage() {
       setIsRemember(true);
     }
 
-    // Call api
+    // Gọi api
     mutate(data);
   };
 

@@ -7,23 +7,19 @@ import { AxiosResponse } from "axios";
 
 import { forgotPassword, ForgotPasswordData } from "@/api/routes/auth-routes";
 
-type Res = {
-  success: boolean;
-  message: string;
-};
-
 export default function useForgotPassword(
   options?: UseMutationOptions<
-    AxiosResponse<Res>,
+    AxiosResponse<any>,
     Error,
     ForgotPasswordData,
     unknown
   >,
-): UseMutationResult<AxiosResponse<Res>, Error, ForgotPasswordData, unknown> {
+): UseMutationResult<AxiosResponse<any>, Error, ForgotPasswordData, unknown> {
   return useMutation({
     mutationKey: ["forgotPassword"],
-    mutationFn: (forgotPasswordData: ForgotPasswordData) =>
-      forgotPassword(forgotPasswordData),
+    mutationFn: async (data: ForgotPasswordData) => {
+      return forgotPassword(data);
+    },
     ...options,
   });
 }

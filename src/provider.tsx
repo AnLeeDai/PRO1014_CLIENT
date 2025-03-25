@@ -4,6 +4,7 @@ import { ToastProvider } from "@heroui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HeroUIProvider } from "@heroui/system";
 import { useHref, useNavigate } from "react-router-dom";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 declare module "@react-types/shared" {
   interface RouterConfig {
@@ -24,6 +25,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
           timeout: 3000,
         }}
       />
+      <SpeedInsights />
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </HeroUIProvider>
   );

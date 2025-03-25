@@ -22,16 +22,24 @@ export type ForgotPasswordData = {
   new_password: string;
 };
 
+// login
 export const login = (data: LoginData): Promise<AxiosResponse<any>> => {
   return axiosInstance.post("?request=post-login", data);
 };
 
+// register
 export const register = (data: RegisterData): Promise<AxiosResponse<any>> => {
   return axiosInstance.post("?request=post-register", data);
 };
 
+// forgot password
 export const forgotPassword = (
   data: ForgotPasswordData,
 ): Promise<AxiosResponse<any>> => {
   return axiosInstance.post("?request=post-forgot-password", data);
+};
+
+// logout
+export const logout = (): Promise<AxiosResponse<any>> => {
+  return axiosInstance.post("?request=post-logout");
 };
