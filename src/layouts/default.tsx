@@ -16,7 +16,7 @@ export default function DefaultLayout({
       <div className="container mx-auto mt-6">
         <Input
           classNames={{
-            base: "max-w-[50%] h-10 mx-auto",
+            base: "px-6 h-10 mx-auto lg:max-w-[50%]",
             mainWrapper: "h-full",
             input:
               "h-full flex items-center text-small placeholder:text-center",

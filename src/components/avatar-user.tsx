@@ -54,6 +54,11 @@ export default function AvatarUserComponent() {
   const email = userData?.email ?? "";
   const username = userData?.username ?? "";
 
+  // Get time of day
+  const now = new Date();
+  const hours = now.getHours();
+  const time = hours >= 0 && hours < 12 ? "sáng" : "chiều";
+
   return (
     <div className="flex items-center gap-4">
       <Dropdown placement="bottom-start">
@@ -62,8 +67,12 @@ export default function AvatarUserComponent() {
             as="button"
             avatarProps={avatarProps}
             className="transition-transform"
+            classNames={{
+              description: "hidden md:block",
+              name: "hidden sm:block",
+            }}
             description={email}
-            name={fullName}
+            name={username}
           />
         </DropdownTrigger>
 
@@ -83,8 +92,8 @@ export default function AvatarUserComponent() {
             className="h-14 gap-2"
             textValue={`Đăng nhập với ${username}`}
           >
-            <p className="font-bold">Đăng nhập với</p>
-            <p className="font-bold">{username}</p>
+            <p className="font-bold">Chào buổi {time}</p>
+            <p className="font-bold">{fullName}</p>
           </DropdownItem>
 
           <DropdownItem

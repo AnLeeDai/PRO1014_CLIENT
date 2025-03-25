@@ -33,7 +33,6 @@ export default function ForgotPasswordPage() {
         color: "danger",
       });
     },
-
     onSuccess: () => {
       setIsStep("final");
     },
@@ -46,23 +45,21 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     if (!e.currentTarget) return;
 
-    let formData = Object.fromEntries(new FormData(e.currentTarget));
+    const formData = Object.fromEntries(new FormData(e.currentTarget));
 
-    let data = {
+    const data = {
       email: formData.email as string,
       new_password: formData.new_password as string,
     };
 
     const errors: Record<string, string> = {};
 
-    // Email validation
     if (!data.email) {
       errors.email = "Vui lòng nhập email";
     } else if (!emailRegex.test(data.email)) {
       errors.email = "Email không hợp lệ";
     }
 
-    // Password validation
     if (!data.new_password) {
       errors.new_password = "Vui lòng nhập mật khẩu";
     } else if (!passwordRegex.test(data.new_password)) {
@@ -76,14 +73,13 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    // call api
     mutate(data);
   };
 
   return (
     <AuthLayout>
       <Card
-        className="w-[500px]"
+        className="w-[100%] lg:w-[40%] mx-auto"
         classNames={{
           header: "p-6",
           body: "p-6",
@@ -98,15 +94,15 @@ export default function ForgotPasswordPage() {
 
         <CardBody>
           {isStep === "final" && (
-            <h1 className="text-center text-lg font-semibold">
-              Yêu cầu đổi mật khẩu đã được ghi nhận, admin sẽ xử lý sơm nhất có
+            <h1 className="text-center text-base sm:text-lg font-medium text-default-700">
+              Yêu cầu đổi mật khẩu đã được ghi nhận, admin sẽ xử lý sớm nhất có
               thể
             </h1>
           )}
 
           {isStep === "start" && (
             <Form
-              className="space-y-4"
+              className="space-y-5"
               validationBehavior="aria"
               validationErrors={isError}
               onSubmit={handleSubmitForm}
@@ -140,7 +136,7 @@ export default function ForgotPasswordPage() {
         </CardBody>
 
         <CardFooter>
-          <p className="text-center w-full">
+          <p className="text-center text-sm sm:text-base w-full">
             Đã có tài khoản?{" "}
             <Link className="text-primary" href={siteConfig.route.login}>
               Đăng nhập ngay
