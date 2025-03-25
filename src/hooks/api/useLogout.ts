@@ -13,12 +13,7 @@ export default function useLogout(
   return useMutation({
     mutationKey: ["logout"],
     mutationFn: async () => {
-      const response = await logout();
-
-      return {
-        success: response.data.success,
-        message: response.data.message,
-      };
+      return logout();
     },
     ...options,
   });
