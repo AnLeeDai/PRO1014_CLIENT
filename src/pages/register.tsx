@@ -119,7 +119,7 @@ export default function RegisterPage() {
   return (
     <AuthLayout>
       <Card
-        className="w-[100%] lg:w-[50%] mx-auto"
+        className="w-[100%] lg:w-[30%] mx-auto"
         classNames={{
           header: "p-6",
           body: "p-6",

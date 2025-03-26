@@ -89,7 +89,7 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <Card
-        className="w-[100%] lg:w-[40%] mx-auto"
+        className="w-[100%] lg:w-[30%] mx-auto"
         classNames={{
           header: "p-6",
           body: "p-6",
