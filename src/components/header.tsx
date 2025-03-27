@@ -65,7 +65,7 @@ export default function HeaderComponent() {
 
   return (
     <Navbar
-      className="container mx-auto"
+      className="mx-auto"
       classNames={{ wrapper: "w-full max-w-none" }}
       onMenuOpenChange={setIsMenuOpen}
     >

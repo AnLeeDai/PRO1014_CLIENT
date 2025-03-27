@@ -14,11 +14,12 @@ import {
 import { siteConfig } from "@/config/site";
 import AuthLayout from "@/layouts/auth";
 import PasswordInput from "@/components/password-input";
-import { emailRegex, passwordRegex } from "@/constants/validate";
+import { emailRegex, passwordRegex, usernameRegex } from "@/constants/validate";
 import useForgotPassword from "@/hooks/api/useForgotPassword";
 
 export default function ForgotPasswordPage() {
   const [isError, setIsError] = useState<{
+    username?: string;
     email?: string;
     new_password?: string;
   }>({});
@@ -48,11 +49,18 @@ export default function ForgotPasswordPage() {
     const formData = Object.fromEntries(new FormData(e.currentTarget));
 
     const data = {
+      username: formData.username as string,
       email: formData.email as string,
       new_password: formData.new_password as string,
     };
 
     const errors: Record<string, string> = {};
+
+    if (!data.username) {
+      errors.username = "Vui lòng nhập tên đăng nhập";
+    } else if (!usernameRegex.test(data.username)) {
+      errors.username = "Tên đăng nhập không hợp lệ";
+    }
 
     if (!data.email) {
       errors.email = "Vui lòng nhập email";
@@ -107,6 +115,14 @@ export default function ForgotPasswordPage() {
               validationErrors={isError}
               onSubmit={handleSubmitForm}
             >
+              <Input
+                isRequired
+                label="Tên đăng nhập"
+                name="username"
+                size="md"
+                type="text"
+              />
+
               <Input
                 isRequired
                 label="Email"
