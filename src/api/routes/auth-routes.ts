@@ -5,7 +5,7 @@ import axiosInstance from "../axiosInstance";
 import { APIResponse } from "@/types/api-response";
 
 export interface LoginData {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -20,6 +20,7 @@ export interface RegisterData {
 }
 
 export interface ForgotPasswordData {
+  username: string;
   email: string;
   new_password: string;
 }

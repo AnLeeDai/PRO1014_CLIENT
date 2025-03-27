@@ -17,13 +17,14 @@ import PasswordInput from "@/components/password-input";
 import useLogin from "@/hooks/api/useLogin";
 import { siteConfig } from "@/config/site";
 import AuthLayout from "@/layouts/auth";
-import { emailRegex, passwordRegex } from "@/constants/validate";
+import { passwordRegex, usernameRegex } from "@/constants/validate";
 import { useAuthUserStore } from "@/zustand";
 
 export default function LoginPage() {
-  const [isError, setIsError] = useState<{ email?: string; password?: string }>(
-    {},
-  );
+  const [isError, setIsError] = useState<{
+    username?: string;
+    password?: string;
+  }>({});
   const [isRemember, setIsRemember] = useState<boolean>(false);
 
   const { setUserData, setUserStorageType } = useAuthUserStore();
@@ -53,17 +54,17 @@ export default function LoginPage() {
 
     const formData = Object.fromEntries(new FormData(e.currentTarget));
     const data = {
-      email: formData.email as string,
+      username: formData.username as string,
       password: formData.password as string,
       remember: formData.remember as string,
     };
 
     const errors: Record<string, string> = {};
 
-    if (!data.email) {
-      errors.email = "Email không được để trống";
-    } else if (!emailRegex.test(data.email)) {
-      errors.email = "Email không hợp lệ";
+    if (!data.username) {
+      errors.username = "Tên đăng nhập không được để trống";
+    } else if (!usernameRegex.test(data.username)) {
+      errors.username = "Tên đăng nhập không hợp lệ";
     }
 
     if (!data.password) {
@@ -111,11 +112,12 @@ export default function LoginPage() {
           >
             <Input
               isRequired
-              label="Email"
-              name="email"
+              label="Tên đăng nhập"
+              name="username"
               size="md"
-              type="email"
+              type="text"
             />
+
             <PasswordInput
               isRequired
               label="Mật khẩu"

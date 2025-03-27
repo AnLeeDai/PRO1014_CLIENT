@@ -10,13 +10,13 @@ export default function DefaultLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex flex-col h-screen">
+    <div className="container mx-auto relative flex flex-col h-screen">
       <Header />
 
       <div className="container mx-auto mt-6">
         <Input
           classNames={{
-            base: "px-6 h-10 mx-auto lg:max-w-[50%]",
+            base: "px-6 h-10 mx-auto lg:max-w-[40%]",
             mainWrapper: "h-full",
             input:
               "h-full flex items-center text-small placeholder:text-center",
@@ -30,9 +30,7 @@ export default function DefaultLayout({
         />
       </div>
 
-      <main className="container mx-auto max-w-7xl px-6 flex-grow pt-6">
-        {children}
-      </main>
+      <main className="px-6 flex-grow pt-6">{children}</main>
 
       {/* footer */}
       <footer className="container mx-auto px-6 bg-default-400 dark:bg-default-500 text-default-500 dark:text-default-400 text-center py-4">
