@@ -7,15 +7,55 @@ import {
   CardBody,
   Form,
   Skeleton,
+  addToast,
 } from "@heroui/react";
+import { useRef } from "react";
 
 import DefaultLayout from "@/layouts/default";
 import { siteConfig } from "@/config/site";
 import BackLink from "@/components/back-link";
 import useGetUserInfo from "@/hooks/api/useGetUserInfo";
+import useUploadAvatar from "@/hooks/api/useUploadAvatar";
 
 export default function ProfilePage() {
-  const { data: userInfo, isLoading: isLoadingUserInfo } = useGetUserInfo();
+  const {
+    data: userInfo,
+    isLoading: isLoadingUserInfo,
+    refetch,
+  } = useGetUserInfo();
+
+  const { mutate: uploadAvatar, isPending } = useUploadAvatar({
+    onSuccess: (res) => {
+      refetch().then(() => {});
+
+      addToast({
+        title: "Thành công",
+        description: res.message,
+        color: "success",
+      });
+    },
+    onError: (err) => {
+      addToast({
+        title: "Thất bại",
+        description: err.message,
+        color: "danger",
+      });
+    },
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const formData = new FormData();
+
+    formData.append("avatar", file);
+
+    uploadAvatar(formData);
+  };
 
   return (
     <DefaultLayout>
@@ -44,22 +84,32 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <p className="text-sm text-muted-foreground mt-2 text-center">
+              <p className="text-sm text-muted-foreground mt-2 mb-5 text-center">
                 Thêm ảnh đại diện. Kích thước đề xuất là 176×176px
               </p>
 
-              <div className="mt-auto w-full flex flex-col lg:flex-row gap-5 items-center">
-                <Button fullWidth color="danger">
-                  Xoá ảnh
-                </Button>
+              <input
+                ref={fileInputRef}
+                accept="image/*"
+                className="hidden"
+                type="file"
+                onChange={handleUploadAvatar}
+              />
 
-                <Button fullWidth color="primary" type="submit">
+              <div className="mt-auto w-full">
+                <Button
+                  fullWidth
+                  color="primary"
+                  isLoading={isPending}
+                  onPress={() => fileInputRef.current?.click()}
+                >
                   Thay đổi ảnh
                 </Button>
               </div>
             </CardBody>
           </Card>
 
+          {/* Cột phải: Thông tin cá nhân */}
           <Card>
             <CardHeader>
               <h2 className="text-lg font-medium">Thông tin cá nhân</h2>

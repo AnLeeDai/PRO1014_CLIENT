@@ -6,9 +6,9 @@ const checkdomain = (): string => {
   const currentUrl = window.location.href;
 
   return currentUrl.includes("localhost")
-    ? //  "http://localhost/PRO1014_SERVER/routes/"
-      "http://localhost/source_code/PRO1014_SERVER/routes/"
-    : baseURL;
+    ? "http://localhost/PRO1014_SERVER/routes/"
+    : // "http://localhost/source_code/PRO1014_SERVER/routes/"
+      baseURL;
 };
 
 const axiosInstance = axios.create({

@@ -16,3 +16,11 @@ export interface IUserInfo {
 // get user info
 export const getUserInfo = (): Promise<AxiosResponse<APIResponse<IUserInfo>>> =>
   axiosInstance.get("?request=get-user-by-id");
+
+// update avatar
+export const updateAvatar = (formData: FormData): Promise<APIResponse<any>> =>
+  axiosInstance.post("?request=put-edit-avatar", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
