@@ -9,7 +9,6 @@ import {
   Button,
   Form,
   addToast,
-  Checkbox,
 } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 
@@ -18,24 +17,21 @@ import useLogin from "@/hooks/api/useLogin";
 import { siteConfig } from "@/config/site";
 import AuthLayout from "@/layouts/auth";
 import { passwordRegex, usernameRegex } from "@/constants/validate";
-import { useAuthUserStore } from "@/zustand";
+import BackLink from "@/components/back-link";
 
 export default function LoginPage() {
   const [isError, setIsError] = useState<{
     username?: string;
     password?: string;
   }>({});
-  const [isRemember, setIsRemember] = useState<boolean>(false);
 
-  const { setUserData, setUserStorageType } = useAuthUserStore();
   const navigate = useNavigate();
 
   const { mutate, isPending } = useLogin({
-    onSuccess: (data) => {
-      setUserStorageType(isRemember ? "localStorage" : "sessionStorage");
-      setUserData(data.data);
+    onSuccess: () => {
       navigate(siteConfig.route.home);
     },
+
     onError: (error) => {
       addToast({
         title: "Đăng nhập thất bại",
@@ -80,10 +76,6 @@ export default function LoginPage() {
       return;
     }
 
-    if (data.remember === "") {
-      setIsRemember(true);
-    }
-
     mutate(data);
   };
 
@@ -98,9 +90,13 @@ export default function LoginPage() {
         }}
       >
         <CardHeader>
+          <BackLink />
+
           <h2 className="text-3xl w-full font-semibold text-center">
             Đăng nhập
           </h2>
+
+          <div className="min-w-6 min-h-6" />
         </CardHeader>
 
         <CardBody>
@@ -125,18 +121,12 @@ export default function LoginPage() {
               size="md"
             />
 
-            <div className="flex w-full flex-wrap gap-3 items-center justify-between px-1 py-2">
-              <Checkbox defaultSelected name="remember" size="md">
-                Ghi nhớ tài khoản
-              </Checkbox>
-
-              <Link
-                className="text-default-500 text-sm"
-                href={siteConfig.route.forgotPassword}
-              >
-                Quên mật khẩu?
-              </Link>
-            </div>
+            <Link
+              className="text-default-500 text-sm ml-auto"
+              href={siteConfig.route.forgotPassword}
+            >
+              Quên mật khẩu?
+            </Link>
 
             <Button
               className="w-full"

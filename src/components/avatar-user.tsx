@@ -4,17 +4,19 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/dropdown";
-import { addToast, User } from "@heroui/react";
+import { addToast, Avatar } from "@heroui/react";
 import { useTheme } from "@heroui/use-theme";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
 
 import { siteConfig } from "@/config/site";
-import { useAuthUserStore } from "@/zustand";
 import useLogout from "@/hooks/api/useLogout";
+import useGetUserInfo from "@/hooks/api/useGetUserInfo";
 
 export default function AvatarUserComponent() {
-  const { userData, logout: userLogout } = useAuthUserStore();
+  const { data } = useGetUserInfo({
+    retry: 0,
+    queryKey: ["getUserInfo"],
+  });
 
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
@@ -35,24 +37,11 @@ export default function AvatarUserComponent() {
         color: "success",
       });
 
-      userLogout();
       navigate(siteConfig.route.login);
     },
   });
 
-  const avatarProps = useMemo(
-    () => ({
-      isBordered: true,
-      src: userData?.avatar_url ?? "",
-      name: userData?.username ?? "",
-      showFallback: true,
-    }),
-    [userData?.avatar_url, userData?.username],
-  );
-
-  const fullName = userData?.full_name ?? "";
-  const email = userData?.email ?? "";
-  const username = userData?.username ?? "";
+  const fullName = data?.data?.full_name ?? "";
 
   // Get time of day
   const now = new Date();
@@ -63,17 +52,7 @@ export default function AvatarUserComponent() {
     <div className="flex items-center gap-4">
       <Dropdown placement="bottom-start">
         <DropdownTrigger>
-          <User
-            as="button"
-            avatarProps={avatarProps}
-            className="transition-transform"
-            classNames={{
-              description: "hidden md:block",
-              name: "hidden sm:block",
-            }}
-            description={email}
-            name={username}
-          />
+          <Avatar className="cursor-pointer" src={data?.data?.avatar_url} />
         </DropdownTrigger>
 
         <DropdownMenu
@@ -87,46 +66,73 @@ export default function AvatarUserComponent() {
             }
           }}
         >
-          <DropdownItem
-            key="user-info"
-            className="h-14 gap-2"
-            textValue={`Đăng nhập với ${username}`}
-          >
-            <p className="font-bold">Chào buổi {time}</p>
-            <p className="font-bold">{fullName}</p>
-          </DropdownItem>
+          {/* Display user info if data exists */}
+          {data ? (
+            <>
+              <DropdownItem
+                key="user-info"
+                className="h-14 gap-2"
+                textValue="Thông tin người dùng"
+              >
+                <p className="font-bold">Chào buổi {time}</p>
+                <p className="font-bold">{fullName}</p>
+              </DropdownItem>
 
-          <DropdownItem
-            key="cart"
-            href={siteConfig.route.cart}
-            textValue="Giỏ hàng"
-          >
-            Giỏ hàng
-          </DropdownItem>
+              <DropdownItem
+                key="cart"
+                href={siteConfig.route.cart}
+                textValue="Giỏ hàng"
+              >
+                Giỏ hàng
+              </DropdownItem>
 
-          <DropdownItem
-            key="profile"
-            href={siteConfig.route.profile}
-            textValue="Chỉnh sửa thông tin cá nhân"
-          >
-            Chỉnh sửa thông tin cá nhân
-          </DropdownItem>
+              <DropdownItem
+                key="profile"
+                href={siteConfig.route.profile}
+                textValue="Chỉnh sửa thông tin cá nhân"
+              >
+                Chỉnh sửa thông tin cá nhân
+              </DropdownItem>
 
-          <DropdownItem
-            key="history"
-            href={siteConfig.route.history}
-            textValue="Lịch sử mua hàng"
-          >
-            Lịch sử mua hàng
-          </DropdownItem>
+              <DropdownItem
+                key="history"
+                href={siteConfig.route.history}
+                textValue="Lịch sử mua hàng"
+              >
+                Lịch sử mua hàng
+              </DropdownItem>
 
-          <DropdownItem key="theme" textValue="Chủ đề">
-            Chuyển sang chủ đề {theme === "light" ? "tối" : "sáng"}
-          </DropdownItem>
+              <DropdownItem key="theme" textValue="Chủ đề">
+                Chuyển sang chủ đề {theme === "light" ? "tối" : "sáng"}
+              </DropdownItem>
 
-          <DropdownItem key="logout" color="danger" textValue="Đăng xuất">
-            Đăng xuất
-          </DropdownItem>
+              <DropdownItem key="logout" color="danger" textValue="Đăng xuất">
+                Đăng xuất
+              </DropdownItem>
+            </>
+          ) : (
+            <>
+              <DropdownItem
+                key="login"
+                href={siteConfig.route.login}
+                textValue="Đăng nhập"
+              >
+                Đăng nhập
+              </DropdownItem>
+
+              <DropdownItem
+                key="register"
+                href={siteConfig.route.register}
+                textValue="Đăng ký"
+              >
+                Đăng ký
+              </DropdownItem>
+
+              <DropdownItem key="theme" textValue="Chủ đề">
+                Chuyển sang chủ đề {theme === "light" ? "tối" : "sáng"}
+              </DropdownItem>
+            </>
+          )}
         </DropdownMenu>
       </Dropdown>
     </div>
