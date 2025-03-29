@@ -16,6 +16,7 @@ import AuthLayout from "@/layouts/auth";
 import PasswordInput from "@/components/password-input";
 import { emailRegex, passwordRegex, usernameRegex } from "@/constants/validate";
 import useForgotPassword from "@/hooks/api/useForgotPassword";
+import BackLink from "@/components/back-link";
 
 export default function ForgotPasswordPage() {
   const [isError, setIsError] = useState<{
@@ -95,9 +96,13 @@ export default function ForgotPasswordPage() {
         }}
       >
         <CardHeader>
+          <BackLink href={siteConfig.route.login} />
+
           <h2 className="text-3xl w-full font-semibold text-center">
             Quên mật khẩu
           </h2>
+
+          <div className="min-w-6 min-h-6" />
         </CardHeader>
 
         <CardBody>

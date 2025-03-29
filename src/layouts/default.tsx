@@ -1,8 +1,8 @@
 import { Link } from "@heroui/link";
-import { Input } from "@heroui/react";
+// import { Input } from "@heroui/react";
 
 import Header from "@/components/header";
-import { SearchIcon } from "@/components/icons";
+// import { SearchIcon } from "@/components/icons";
 
 export default function DefaultLayout({
   children,
@@ -13,7 +13,7 @@ export default function DefaultLayout({
     <div className="container mx-auto relative flex flex-col h-screen">
       <Header />
 
-      <div className="container mx-auto mt-6">
+      {/* <div className="container mx-auto mt-6">
         <Input
           classNames={{
             base: "px-6 h-10 mx-auto lg:max-w-[40%]",
@@ -28,7 +28,7 @@ export default function DefaultLayout({
           startContent={<SearchIcon size={24} />}
           type="search"
         />
-      </div>
+      </div> */}
 
       <main className="px-6 flex-grow pt-6">{children}</main>
 
