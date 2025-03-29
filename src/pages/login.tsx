@@ -9,6 +9,7 @@ import {
   Button,
   Form,
   addToast,
+  Checkbox,
 } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 
@@ -121,12 +122,18 @@ export default function LoginPage() {
               size="md"
             />
 
-            <Link
-              className="text-default-500 text-sm ml-auto"
-              href={siteConfig.route.forgotPassword}
-            >
-              Quên mật khẩu?
-            </Link>
+            <div className="flex w-full flex-wrap gap-3 items-center justify-between px-1 py-2">
+              <Checkbox defaultSelected name="remember" size="md">
+                Ghi nhớ tài khoản
+              </Checkbox>
+
+              <Link
+                className="text-default-500 text-sm"
+                href={siteConfig.route.forgotPassword}
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
 
             <Button
               className="w-full"

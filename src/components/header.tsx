@@ -6,10 +6,9 @@ import {
   NavbarItem,
   NavbarMenu,
   NavbarMenuItem,
-  Link,
 } from "@heroui/react";
 import { useState, useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 
 import AvatarUser from "./avatar-user";
 
@@ -28,14 +27,13 @@ export default function HeaderComponent() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
   const location = useLocation();
-
   const currentPath = location.pathname;
 
   const desktopNavItems = useMemo(
     () =>
       menuItems.map((item) => (
         <NavbarItem key={item.name} isActive={currentPath === item.href}>
-          <Link color="foreground" href={item.href}>
+          <Link className="text-foreground" to={item.href}>
             {item.name}
           </Link>
         </NavbarItem>
@@ -47,12 +45,7 @@ export default function HeaderComponent() {
     () =>
       menuItems.map((item) => (
         <NavbarMenuItem key={item.name} isActive={currentPath === item.href}>
-          <Link
-            className="w-full"
-            color="foreground"
-            href={item.href}
-            size="lg"
-          >
+          <Link className="w-full text-foreground text-lg block" to={item.href}>
             {item.name}
           </Link>
         </NavbarMenuItem>
@@ -72,7 +65,7 @@ export default function HeaderComponent() {
           className="sm:hidden"
         />
         <NavbarBrand>
-          <Link color="foreground" href={siteConfig.route.home} size="lg">
+          <Link className="text-foreground text-lg" to={siteConfig.route.home}>
             <p className="font-bold text-inherit">PRO1014</p>
           </Link>
         </NavbarBrand>

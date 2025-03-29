@@ -6,7 +6,8 @@ const checkdomain = (): string => {
   const currentUrl = window.location.href;
 
   return currentUrl.includes("localhost")
-    ? "http://localhost/PRO1014_SERVER/routes/"
+    ? //  "http://localhost/PRO1014_SERVER/routes/"
+      "http://localhost/source_code/PRO1014_SERVER/routes/"
     : baseURL;
 };
 
