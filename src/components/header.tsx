@@ -1,4 +1,3 @@
-import { Button } from "@heroui/button";
 import {
   Navbar,
   NavbarContent,
@@ -15,7 +14,6 @@ import { useLocation } from "react-router-dom";
 import AvatarUser from "./avatar-user";
 
 import { siteConfig } from "@/config/site";
-import { useAuthUserStore } from "@/zustand";
 
 const menuItems: {
   name: string;
@@ -28,7 +26,6 @@ const menuItems: {
 
 export default function HeaderComponent() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const { userData } = useAuthUserStore();
 
   const location = useLocation();
 
@@ -86,22 +83,9 @@ export default function HeaderComponent() {
       </NavbarContent>
 
       <NavbarContent justify="end">
-        {userData ? (
-          <NavbarItem>
-            <AvatarUser />
-          </NavbarItem>
-        ) : (
-          <NavbarItem>
-            <Button
-              as={Link}
-              color="primary"
-              href={siteConfig.route.login}
-              variant="flat"
-            >
-              Đăng nhập
-            </Button>
-          </NavbarItem>
-        )}
+        <NavbarItem>
+          <AvatarUser />
+        </NavbarItem>
       </NavbarContent>
 
       <NavbarMenu>{mobileNavItems}</NavbarMenu>

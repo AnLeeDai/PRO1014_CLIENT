@@ -22,6 +22,7 @@ import {
   phoneNumRegex,
   usernameRegex,
 } from "@/constants/validate";
+import BackLink from "@/components/back-link";
 
 export default function RegisterPage() {
   const [isError, setIsError] = useState<{
@@ -127,7 +128,11 @@ export default function RegisterPage() {
         }}
       >
         <CardHeader>
+          <BackLink href={siteConfig.route.login} />
+
           <h2 className="text-3xl w-full font-semibold text-center">Đăng ký</h2>
+
+          <div className="min-w-6 min-h-6" />
         </CardHeader>
 
         <CardBody>
@@ -168,7 +173,7 @@ export default function RegisterPage() {
             />
 
             <Button
-              className="col-span-1 md:col-span-2"
+              className="mt-5 col-span-1 md:col-span-2"
               color="primary"
               isLoading={isPending}
               size="lg"
