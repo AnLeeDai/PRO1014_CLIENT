@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  images: {
+    domains: ["heroui.com", "i.pravatar.cc", "cdn.yoursite.com"],
+  },
+};
 
 module.exports = nextConfig;

@@ -12,5 +12,6 @@ export const siteConfig = {
     laptop: "/laptop",
     tablet: "/tablet",
     accessories: "/accessories",
+    profile: "/profile",
   },
 };

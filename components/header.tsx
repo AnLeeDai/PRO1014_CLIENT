@@ -8,13 +8,12 @@ import {
   NavbarMenuToggle,
   NavbarMenu,
   NavbarMenuItem,
-  Button,
 } from "@heroui/react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
 
 import LinkCustom from "./link";
+import AvatarUser from "./avatar-user";
 
 import { siteConfig } from "@/config/site";
 
@@ -68,14 +67,7 @@ export default function Header() {
 
       <NavbarContent justify="end">
         <NavbarItem>
-          <Button
-            as={Link}
-            color="primary"
-            href={siteConfig.routes.login}
-            variant="flat"
-          >
-            Đăng nhập
-          </Button>
+          <AvatarUser />
         </NavbarItem>
       </NavbarContent>
 
