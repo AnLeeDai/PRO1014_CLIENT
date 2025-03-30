@@ -8,9 +8,11 @@ import {
   Button,
   Image,
   Skeleton,
+  Tooltip,
 } from "@heroui/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Eye } from "lucide-react";
 
 interface Product {
   id: string | number;
@@ -23,6 +25,7 @@ interface CarouselProductHomeProps {
   data: Product[];
   itemsPerView?: number;
   isLoading?: boolean;
+  onOpenModal?: () => void;
 }
 
 const variants = {
@@ -44,6 +47,7 @@ export default function CarouselProductHome({
   data,
   itemsPerView = 4,
   isLoading = false,
+  onOpenModal,
 }: CarouselProductHomeProps) {
   const [startIndex, setStartIndex] = useState(0);
   const [direction, setDirection] = useState(0);
@@ -142,11 +146,21 @@ export default function CarouselProductHome({
               </CardHeader>
 
               <CardBody className="p-2">
-                <h3 className="text-sm font-medium line-clamp-2">
-                  {item.title}
-                </h3>
-                <p className="text-sm mt-1">{item.price}</p>
-                <Button className="mt-2 w-full" size="md">
+                <Tooltip content={item.title} size="lg">
+                  <h3 className="text-lg font-bold line-clamp-1">
+                    {item.title}
+                  </h3>
+                </Tooltip>
+
+                <p className="text-lg mt-1">{item.price}</p>
+
+                <Button
+                  className="mt-2 w-full"
+                  color="primary"
+                  size="md"
+                  onPress={onOpenModal}
+                  startContent={<Eye />}
+                >
                   Xem chi tiết
                 </Button>
               </CardBody>

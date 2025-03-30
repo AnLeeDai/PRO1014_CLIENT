@@ -50,7 +50,7 @@ export default function Banner() {
               idx === index ? "bg-white" : "bg-gray-400"
             }`}
             role="button"
-            style={{ zIndex: 9999 }}
+            style={{ zIndex: 20 }}
             tabIndex={0}
             onClick={() => setIndex(idx)}
             onKeyDown={(e) => {

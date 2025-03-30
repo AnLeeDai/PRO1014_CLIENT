@@ -13,5 +13,6 @@ export const siteConfig = {
     tablet: "/tablet",
     accessories: "/accessories",
     profile: "/profile",
+    cart: "/cart",
   },
 };

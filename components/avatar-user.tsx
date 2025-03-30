@@ -10,6 +10,14 @@ import {
 import React, { Key, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import {
+  LogOut,
+  Moon,
+  Sun,
+  Settings,
+  ShoppingCart,
+  Package,
+} from "lucide-react";
 
 import { siteConfig } from "@/config/site";
 
@@ -18,7 +26,8 @@ export default function AvatarUser() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
-  const isTheme = theme === "dark" ? "sáng" : "tối";
+  const isDark = theme === "dark";
+  const nextTheme = isDark ? "light" : "dark";
 
   useEffect(() => {
     setMounted(true);
@@ -31,16 +40,17 @@ export default function AvatarUser() {
       case "settings":
         router.push(siteConfig.routes.profile);
         break;
-      case "settings":
       case "orders":
-      case "favorites":
+        router.push(siteConfig.routes.home);
+        break;
+      case "cart":
+        router.push(siteConfig.routes.cart);
+        break;
       case "theme":
-        setTheme(theme === "dark" ? "light" : "dark");
+        setTheme(nextTheme);
         break;
       case "logout":
         router.push(siteConfig.routes.login);
-        break;
-      default:
         break;
     }
   };
@@ -75,27 +85,49 @@ export default function AvatarUser() {
           variant="flat"
           onAction={handleAction}
         >
-          <DropdownItem
-            key="profile"
-            className="h-14 gap-2"
-            textValue={`${greeting} @khachhang`}
-          >
+          <DropdownItem key="profile" className="h-14 gap-2">
             <p className="font-bold">{greeting}</p>
             <p className="font-bold">@khachhang</p>
           </DropdownItem>
-          <DropdownItem key="settings" textValue="Thông tin tài khoản">
+
+          <DropdownItem
+            key="settings"
+            description="Cập nhật thông tin tài khoản của bạn"
+            startContent={<Settings size={18} />}
+          >
             Thông tin tài khoản
           </DropdownItem>
-          <DropdownItem key="orders" textValue="Đơn hàng của tôi">
+
+          <DropdownItem
+            key="orders"
+            description="Xem lại các đơn hàng bạn đã mua"
+            startContent={<Package size={18} />}
+          >
             Đơn hàng của tôi
           </DropdownItem>
-          <DropdownItem key="favorites" textValue="Danh sách yêu thích">
-            Danh sách yêu thích
+
+          <DropdownItem
+            key="cart"
+            description="Xem các sản phẩm đã thêm vào giỏ"
+            startContent={<ShoppingCart size={18} />}
+          >
+            Giỏ hàng của tôi
           </DropdownItem>
-          <DropdownItem key="theme" textValue={`Chuyển sang chủ đề ${isTheme}`}>
-            Chuyển sang chủ đề {isTheme}
+
+          <DropdownItem
+            key="theme"
+            description={`Chuyển sang chế độ ${isDark ? "sáng" : "tối"}`}
+            startContent={isDark ? <Sun size={18} /> : <Moon size={18} />}
+          >
+            Chế độ {isDark ? "sáng" : "tối"}
           </DropdownItem>
-          <DropdownItem key="logout" color="danger" textValue="Đăng xuất">
+
+          <DropdownItem
+            key="logout"
+            color="danger"
+            description="Đăng xuất khỏi tài khoản"
+            startContent={<LogOut size={18} />}
+          >
             Đăng xuất
           </DropdownItem>
         </DropdownMenu>

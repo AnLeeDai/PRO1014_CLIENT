@@ -11,8 +11,9 @@ import {
 } from "@heroui/react";
 import { useState } from "react";
 
-import { regexEmail, regexPhone } from "@/helpers/regex";
 import ModalChangePassword from "./modal-change-password";
+
+import { regexEmail, regexPhone } from "@/helpers/regex";
 
 export default function ChangeProfileForm() {
   const [isError, setIsError] = useState<{
@@ -58,6 +59,8 @@ export default function ChangeProfileForm() {
 
   return (
     <>
+      <ModalChangePassword isOpen={isOpen} onOpenChange={onOpenChange} />
+
       <Card>
         <CardHeader>
           <h1 className="text-lg font-bold">Thông tin cá nhân</h1>
@@ -92,8 +95,6 @@ export default function ChangeProfileForm() {
           </Form>
         </CardBody>
       </Card>
-
-      <ModalChangePassword isOpen={isOpen} onOpenChange={onOpenChange} />
     </>
   );
 }
