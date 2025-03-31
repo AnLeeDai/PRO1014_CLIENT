@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+import LaptopContainer from "@/modules/product/laptop-container";
+
 export const metadata: Metadata = {
   title: {
     default: "Laptop",
@@ -8,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function LaptopPage() {
-  return <div>LaptopPage</div>;
+  return <LaptopContainer />;
 }

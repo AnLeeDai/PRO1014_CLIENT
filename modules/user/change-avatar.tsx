@@ -16,7 +16,7 @@ export default function ChangeAvatar() {
           src="https://avatars.githubusercontent.com/u/12345678?v=4"
         />
 
-        <p className="text-sm text-center mt-4">
+        <p className="text-sm text-center my-4">
           Kích thước đề xuất: 176 x 176 pixel
         </p>
 

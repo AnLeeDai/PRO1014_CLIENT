@@ -41,7 +41,7 @@ export default function AvatarUser() {
         router.push(siteConfig.routes.profile);
         break;
       case "orders":
-        router.push(siteConfig.routes.home);
+        router.push(siteConfig.routes.order);
         break;
       case "cart":
         router.push(siteConfig.routes.cart);
@@ -85,7 +85,11 @@ export default function AvatarUser() {
           variant="flat"
           onAction={handleAction}
         >
-          <DropdownItem key="profile" className="h-14 gap-2">
+          <DropdownItem
+            key="profile"
+            className="h-14 gap-2"
+            textValue="Thông tin người dùng"
+          >
             <p className="font-bold">{greeting}</p>
             <p className="font-bold">@khachhang</p>
           </DropdownItem>
@@ -94,6 +98,7 @@ export default function AvatarUser() {
             key="settings"
             description="Cập nhật thông tin tài khoản của bạn"
             startContent={<Settings size={18} />}
+            textValue="Thông tin tài khoản"
           >
             Thông tin tài khoản
           </DropdownItem>
@@ -102,14 +107,16 @@ export default function AvatarUser() {
             key="orders"
             description="Xem lại các đơn hàng bạn đã mua"
             startContent={<Package size={18} />}
+            textValue="Đơn hàng của tôi"
           >
-            Đơn hàng của tôi
+            Lịch sử mua hàng
           </DropdownItem>
 
           <DropdownItem
             key="cart"
             description="Xem các sản phẩm đã thêm vào giỏ"
             startContent={<ShoppingCart size={18} />}
+            textValue="Giỏ hàng của tôi"
           >
             Giỏ hàng của tôi
           </DropdownItem>
@@ -118,6 +125,7 @@ export default function AvatarUser() {
             key="theme"
             description={`Chuyển sang chế độ ${isDark ? "sáng" : "tối"}`}
             startContent={isDark ? <Sun size={18} /> : <Moon size={18} />}
+            textValue={`Chuyển sang chế độ ${isDark ? "sáng" : "tối"}`}
           >
             Chế độ {isDark ? "sáng" : "tối"}
           </DropdownItem>
@@ -127,6 +135,7 @@ export default function AvatarUser() {
             color="danger"
             description="Đăng xuất khỏi tài khoản"
             startContent={<LogOut size={18} />}
+            textValue="Đăng xuất"
           >
             Đăng xuất
           </DropdownItem>
