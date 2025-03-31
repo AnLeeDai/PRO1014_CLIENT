@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+import AccessoriesContainer from "@/modules/product/accessories-container";
+
 export const metadata: Metadata = {
   title: {
     default: "Phụ kiện",
@@ -8,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function AccessoriesPage() {
-  return <div>AccessoriesPage</div>;
+  return <AccessoriesContainer />;
 }

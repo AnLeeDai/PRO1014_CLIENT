@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+import TabletContainer from "@/modules/product/tablet-container";
+
 export const metadata: Metadata = {
   title: {
     default: "Máy tính bảng",
@@ -8,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function TabletPage() {
-  return <div>TabletPage</div>;
+  return <TabletContainer />;
 }

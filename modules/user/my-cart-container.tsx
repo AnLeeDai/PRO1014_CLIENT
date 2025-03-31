@@ -10,8 +10,9 @@ import {
   Tab,
   Tabs,
   Chip,
+  Divider,
 } from "@heroui/react";
-import { CreditCard } from "lucide-react";
+import { CreditCard, TicketPercent } from "lucide-react";
 
 import Forward from "@/components/forward";
 import { siteConfig } from "@/config/site";
@@ -28,7 +29,7 @@ export default function MyCartContainer() {
     <div>
       <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <Forward href={siteConfig.routes.home} label="Quay lại trang chủ" />
-        <h1 className="text-3xl font-bold">Thanh toán</h1>
+        <h1 className="text-3xl font-bold">Giỏ hàng của tôi</h1>
       </div>
 
       {/* Sử dụng flex thay vì grid */}
@@ -81,9 +82,9 @@ export default function MyCartContainer() {
               <h2 className="text-xl font-semibold">Thông tin cá nhân</h2>
             </CardHeader>
             <CardBody className="space-y-2 text-base">
-              <div>👤 Olivia Grey</div>
-              <div>📧 olivia.grey@gmail.com</div>
-              <div>📞 +84 987 654 321</div>
+              <div>👤 Lê Đại An</div>
+              <div>📧 ledaian22@gmail.com</div>
+              <div>📞 +84 0334920373</div>
             </CardBody>
           </Card>
         </div>
@@ -99,6 +100,7 @@ export default function MyCartContainer() {
                 </Chip>
               </div>
             </CardHeader>
+
             <CardBody className="space-y-5 text-base">
               {[1, 2].map((item, idx) => (
                 <div key={idx} className="flex gap-3 items-center">
@@ -118,6 +120,15 @@ export default function MyCartContainer() {
                   </div>
                 </div>
               ))}
+
+              <Divider className="my-4" />
+
+              <Input
+                label="Mã giảm giá (voucher)"
+                placeholder="Nhập mã giảm giá"
+                size="lg"
+                startContent={<TicketPercent size={18} />}
+              />
 
               <div className="border-t pt-4 space-y-2 text-base">
                 <div className="flex justify-between">

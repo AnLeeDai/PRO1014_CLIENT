@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+import PhoneContainer from "@/modules/product/phone-container";
+
 export const metadata: Metadata = {
   title: {
     default: "Điện thoại",
@@ -8,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function PhonePage() {
-  return <div>PhonePage</div>;
+  return <PhoneContainer />;
 }

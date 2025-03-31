@@ -1,0 +1,36 @@
+"use client";
+
+import { useDisclosure } from "@heroui/react";
+
+import ModalDetailProduct from "@/components/modal-detail-product";
+import ProductListLayout from "@/components/product-list-layout";
+import { laptops } from "@/constants/mockdata-laptop";
+
+const BRANDS = ["Apple", "Dell", "Asus"];
+const PRICES = [
+  { label: "Tất cả", value: "all" },
+  { label: "Dưới 10 triệu", value: "under-10" },
+  { label: "10-20 triệu", value: "10-20" },
+  { label: "Trên 20 triệu", value: "over-20" },
+];
+
+export default function LaptopContainer() {
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  return (
+    <>
+      <ModalDetailProduct
+        isOpen={isOpen}
+        productId={1}
+        onOpenChange={onOpenChange}
+      />
+
+      <ProductListLayout
+        brands={BRANDS}
+        data={laptops}
+        priceOptions={PRICES}
+        onPress={onOpen}
+      />
+    </>
+  );
+}
