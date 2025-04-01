@@ -12,7 +12,7 @@ export default function ProfileContainer() {
         <h1 className="text-3xl font-bold mb-4">Thông tin tài khoản</h1>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:gap-8">
+      <div className="grid gap-4 lg:grid-cols-2">
         <ChangeAvatar />
         <ChangeProfileForm />
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  addToast,
   Button,
   Card,
   CardBody,
@@ -8,53 +9,83 @@ import {
   Form,
   Input,
   useDisclosure,
+  Skeleton,
 } from "@heroui/react";
-import { useState } from "react";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Save, Lock } from "lucide-react";
 
 import ModalChangePassword from "./modal-change-password";
 
 import { regexEmail, regexPhone } from "@/helpers/regex";
+import { useUserInfo } from "@/hooks/useUserInfo";
+import { useUpdateInfoUser } from "@/hooks/useUpdateInfoUser";
+
+interface FormData {
+  full_name: string;
+  email: string;
+  phone_number: string;
+  address: string;
+}
 
 export default function ChangeProfileForm() {
-  const [isError, setIsError] = useState<{
-    full_name?: string;
-    email?: string;
-    phone_number?: string;
-    address?: string;
-  }>({});
-
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { data, isPending: isPendingUserInfo, refetch } = useUserInfo();
 
-  const handleSubmitForm = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const { control, handleSubmit, setError, reset } = useForm<FormData>({
+    defaultValues: {
+      full_name: "",
+      email: "",
+      phone_number: "",
+      address: "",
+    },
+  });
 
-    const formData = Object.fromEntries(new FormData(e.currentTarget));
+  const { mutate, isPending } = useUpdateInfoUser({
+    onSuccess: () => {
+      addToast({
+        title: "Cập nhật thành công",
+        description: "Thông tin cá nhân đã được cập nhật",
+        color: "success",
+      });
+      refetch();
+    },
+    onError: (error) => {
+      addToast({
+        title: "Đã xảy ra sự cố",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
 
-    const data = {
-      full_name: formData.full_name as string,
-      email: formData.email as string,
-      phone_number: formData.phone_number as string,
-      address: formData.address as string,
-    };
+  useEffect(() => {
+    if (data?.data) {
+      reset({
+        full_name: data.data.full_name || "",
+        email: data.data.email || "",
+        phone_number: data.data.phone_number || "",
+        address: data.data.address || "",
+      });
+    }
+  }, [data, reset]);
 
-    const errors: Record<string, string> = {};
+  const onSubmit = (formData: FormData) => {
+    let hasError = false;
 
-    if (data.email && !regexEmail.test(data.email)) {
-      errors.email = "Email không hợp lệ";
+    if (formData.email && !regexEmail.test(formData.email)) {
+      setError("email", { message: "Email không hợp lệ" });
+      hasError = true;
     }
 
-    if (data.phone_number && !regexPhone.test(data.phone_number)) {
-      errors.phone_number = "Số điện thoại không hợp lệ";
+    if (formData.phone_number && !regexPhone.test(formData.phone_number)) {
+      setError("phone_number", { message: "Số điện thoại không hợp lệ" });
+      hasError = true;
     }
 
-    if (Object.keys(errors).length > 0) {
-      setIsError(errors);
+    if (hasError) return;
 
-      return;
-    }
-
-    // Submit thành công
-    console.log("Đăng ký:", data);
+    mutate(formData);
   };
 
   return (
@@ -67,32 +98,111 @@ export default function ChangeProfileForm() {
         </CardHeader>
 
         <CardBody className="flex-1 flex flex-col">
-          <Form
-            className="flex flex-col h-full w-full"
-            validationBehavior="aria"
-            validationErrors={isError}
-            onSubmit={handleSubmitForm}
-          >
-            {/* Group input */}
+          {isPendingUserInfo ? (
             <div className="flex flex-col gap-5 w-full">
-              <Input isDisabled label="Tên đăng nhập" name="username" />
-              <Input label="Họ và tên" name="full_name" />
-              <Input label="Email" name="email" />
-              <Input label="Số điện thoại" name="phone_number" />
-              <Input label="Địa chỉ" name="address" />
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-md" />
+              ))}
+              <div className="grid gap-4 lg:grid-cols-2 w-full mt-8">
+                <Skeleton className="h-12 w-full rounded-md" />
+                <Skeleton className="h-12 w-full rounded-md" />
+              </div>
             </div>
+          ) : (
+            <Form
+              className="flex flex-col h-full w-full"
+              validationBehavior="aria"
+              onSubmit={handleSubmit(onSubmit)}
+            >
+              <div className="flex flex-col gap-5 w-full">
+                <Input
+                  isDisabled
+                  label="Tên đăng nhập"
+                  name="username"
+                  value={data?.data.username}
+                />
 
-            {/* Nút luôn nằm dưới cùng */}
-            <div className="mt-auto pt-8 grid gap-4 lg:grid-cols-2 w-full">
-              <Button fullWidth color="default" size="lg" onPress={onOpen}>
-                Đổi mật khẩu
-              </Button>
+                <Controller
+                  control={control}
+                  name="full_name"
+                  render={({ field, fieldState }) => (
+                    <Input
+                      {...field}
+                      errorMessage={fieldState.error?.message}
+                      isInvalid={fieldState.invalid}
+                      label="Họ và tên"
+                      validationBehavior="aria"
+                    />
+                  )}
+                />
 
-              <Button fullWidth color="primary" size="lg" type="submit">
-                Thay đổi thông tin
-              </Button>
-            </div>
-          </Form>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field, fieldState }) => (
+                    <Input
+                      {...field}
+                      errorMessage={fieldState.error?.message}
+                      isInvalid={fieldState.invalid}
+                      label="Email"
+                      validationBehavior="aria"
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="phone_number"
+                  render={({ field, fieldState }) => (
+                    <Input
+                      {...field}
+                      errorMessage={fieldState.error?.message}
+                      isInvalid={fieldState.invalid}
+                      label="Số điện thoại"
+                      validationBehavior="aria"
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="address"
+                  render={({ field, fieldState }) => (
+                    <Input
+                      {...field}
+                      errorMessage={fieldState.error?.message}
+                      isInvalid={fieldState.invalid}
+                      label="Địa chỉ"
+                      validationBehavior="aria"
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="mt-auto pt-8 grid gap-4 lg:grid-cols-2 w-full">
+                <Button
+                  fullWidth
+                  color="default"
+                  size="lg"
+                  startContent={<Lock />}
+                  onPress={onOpen}
+                >
+                  Đổi mật khẩu
+                </Button>
+
+                <Button
+                  fullWidth
+                  color="primary"
+                  isLoading={isPending}
+                  size="lg"
+                  startContent={<Save />}
+                  type="submit"
+                >
+                  Thay đổi thông tin
+                </Button>
+              </div>
+            </Form>
+          )}
         </CardBody>
       </Card>
     </>

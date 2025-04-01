@@ -127,7 +127,7 @@ export default function MyCartContainer() {
                 label="Mã giảm giá (voucher)"
                 placeholder="Nhập mã giảm giá"
                 size="lg"
-                startContent={<TicketPercent size={18} />}
+                startContent={<TicketPercent />}
               />
 
               <div className="border-t pt-4 space-y-2 text-base">
@@ -154,7 +154,7 @@ export default function MyCartContainer() {
                 className="mt-4 text-base"
                 color="primary"
                 size="lg"
-                startContent={<CreditCard size={18} />}
+                startContent={<CreditCard />}
               >
                 Thanh toán {formatVND(61630000)}
               </Button>

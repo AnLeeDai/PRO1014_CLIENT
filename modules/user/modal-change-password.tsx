@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Modal,
   ModalContent,
@@ -6,26 +8,69 @@ import {
   Button,
   Input,
   Form,
+  addToast,
 } from "@heroui/react";
-import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { X, KeyRound } from "lucide-react";
 
 import PasswordInput from "@/components/password-input";
 import { regexPassword, regexUsername } from "@/helpers/regex";
+import { useChangePasswordUser } from "@/hooks/useChangePasswordUser";
+import { siteConfig } from "@/config/site";
+import { useLogoutUser } from "@/hooks/useLogoutUser";
 
 interface IModalChangePasswordProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
 
+interface ChangePasswordFormData {
+  username: string;
+  old_password: string;
+  new_password: string;
+}
+
 export default function ModalChangePassword({
   isOpen,
   onOpenChange,
 }: IModalChangePasswordProps) {
-  const [isError, setIsError] = useState<{
-    username?: string;
-    old_password?: string;
-    new_password?: string;
-  }>({});
+  const router = useRouter();
+
+  const { control, handleSubmit, setError } = useForm<ChangePasswordFormData>({
+    defaultValues: {
+      username: "",
+      old_password: "",
+      new_password: "",
+    },
+  });
+
+  const { mutate: mutateLogout } = useLogoutUser();
+
+  const { mutate, isPending } = useChangePasswordUser({
+    onSuccess: () => {
+      addToast({
+        title: "Đổi mật khẩu thành công",
+        description: "Vui lòng đăng nhập lại để tiếp tục",
+        color: "success",
+      });
+
+      mutateLogout({});
+
+      localStorage.removeItem("role");
+      localStorage.removeItem("isLogin");
+
+      router.replace(siteConfig.routes.login);
+    },
+
+    onError: (error) => {
+      addToast({
+        title: "Đã xảy ra sự cố",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
 
   const validatePassword = (value: string, fieldName = "Mật khẩu") => {
     if (!value) return `${fieldName} không được để trống`;
@@ -35,125 +80,138 @@ export default function ModalChangePassword({
     return null;
   };
 
-  const handleSubmitForm = (e: {
-    preventDefault: () => void;
-    currentTarget: HTMLFormElement | undefined;
-  }) => {
-    e.preventDefault();
-    if (!e.currentTarget) return;
+  const onSubmit = (data: ChangePasswordFormData) => {
+    let hasError = false;
 
-    const formData = Object.fromEntries(new FormData(e.currentTarget));
-
-    const data = {
-      username: formData.username as string,
-      old_password: formData.old_password as string,
-      new_password: formData.new_password as string,
-    };
-
-    const errors: Record<string, string> = {};
-
-    // Validate username
-    if (!data.username) {
-      errors.username = "Tên đăng nhập không được để trống";
-    } else if (!regexUsername.test(data.username)) {
-      errors.username =
-        "Tên đăng nhập phải có ít nhất 6 ký tự, chỉ chứa chữ cái và số";
+    if (!regexUsername.test(data.username)) {
+      setError("username", {
+        message:
+          "Tên đăng nhập phải có ít nhất 6 ký tự, chỉ chứa chữ cái và số",
+      });
+      hasError = true;
     }
 
-    // Validate mật khẩu
-    const oldPasswordError = validatePassword(data.old_password, "Mật khẩu cũ");
+    const oldPassErr = validatePassword(data.old_password, "Mật khẩu cũ");
 
-    if (oldPasswordError) {
-      errors.old_password = oldPasswordError;
+    if (oldPassErr) {
+      setError("old_password", { message: oldPassErr });
+      hasError = true;
     }
 
-    const newPasswordError = validatePassword(
-      data.new_password,
-      "Mật khẩu mới",
-    );
+    const newPassErr = validatePassword(data.new_password, "Mật khẩu mới");
 
-    if (newPasswordError) {
-      errors.new_password = newPasswordError;
+    if (newPassErr) {
+      setError("new_password", { message: newPassErr });
+      hasError = true;
     }
 
-    if (Object.keys(errors).length > 0) {
-      setIsError(errors);
+    if (hasError) return;
 
-      return;
-    }
-
-    console.log("Submit form:", data);
+    mutate(data);
   };
 
   return (
-    <>
-      <Modal
-        backdrop="blur"
-        classNames={{
-          header: "border-b-[1px] border-[#292f46]",
-          body: "mt-5",
-        }}
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">
-                Thay đổi mật khẩu
-              </ModalHeader>
+    <Modal
+      backdrop="blur"
+      classNames={{
+        header: "border-b-[1px] border-[#292f46]",
+        body: "mt-5",
+      }}
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+    >
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              Thay đổi mật khẩu
+            </ModalHeader>
 
-              <ModalBody>
-                <Form
-                  className="space-y-5 mb-5"
-                  validationBehavior="aria"
-                  validationErrors={isError}
-                  onSubmit={handleSubmitForm}
-                >
-                  <Input
-                    isRequired
-                    label="Tên đăng nhập"
-                    name="username"
-                    size="md"
-                    type="text"
-                  />
+            <ModalBody>
+              <Form
+                className="space-y-5 mb-5"
+                validationBehavior="aria"
+                onSubmit={handleSubmit(onSubmit)}
+              >
+                <Controller
+                  control={control}
+                  name="username"
+                  render={({ field, fieldState }) => (
+                    <Input
+                      {...field}
+                      isRequired
+                      errorMessage={fieldState.error?.message}
+                      isInvalid={fieldState.invalid}
+                      label="Tên đăng nhập"
+                      size="md"
+                      type="text"
+                      validationBehavior="aria"
+                    />
+                  )}
+                  rules={{ required: "Tên đăng nhập không được để trống" }}
+                />
 
-                  <PasswordInput
-                    isRequired
-                    label="Mật khẩu cũ"
-                    name="old_password"
-                    size="md"
-                    type="password"
-                  />
+                <Controller
+                  control={control}
+                  name="old_password"
+                  render={({ field, fieldState }) => (
+                    <PasswordInput
+                      {...field}
+                      isRequired
+                      errorMessage={fieldState.error?.message}
+                      isInvalid={fieldState.invalid}
+                      label="Mật khẩu cũ"
+                      size="md"
+                      validationBehavior="aria"
+                    />
+                  )}
+                  rules={{ required: "Mật khẩu cũ không được để trống" }}
+                />
 
-                  <PasswordInput
-                    isRequired
-                    label="Mật khẩu mới"
-                    name="new_password"
-                    size="md"
-                    type="password"
-                  />
+                <Controller
+                  control={control}
+                  name="new_password"
+                  render={({ field, fieldState }) => (
+                    <PasswordInput
+                      {...field}
+                      isRequired
+                      errorMessage={fieldState.error?.message}
+                      isInvalid={fieldState.invalid}
+                      label="Mật khẩu mới"
+                      size="md"
+                      validationBehavior="aria"
+                    />
+                  )}
+                  rules={{ required: "Mật khẩu mới không được để trống" }}
+                />
 
-                  <div className="w-full flex justify-end gap-5 mt-5">
-                    <Button
-                      fullWidth
-                      color="danger"
-                      size="lg"
-                      onPress={onClose}
-                    >
-                      Hủy
-                    </Button>
+                <div className="w-full flex justify-end gap-5 mt-5">
+                  <Button
+                    fullWidth
+                    color="danger"
+                    size="lg"
+                    startContent={<X />}
+                    onPress={onClose}
+                  >
+                    Hủy
+                  </Button>
 
-                    <Button fullWidth color="primary" size="lg" type="submit">
-                      Đổi mật khẩu
-                    </Button>
-                  </div>
-                </Form>
-              </ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-    </>
+                  <Button
+                    fullWidth
+                    color="primary"
+                    isLoading={isPending}
+                    size="lg"
+                    startContent={<KeyRound />}
+                    type="submit"
+                  >
+                    Đổi mật khẩu
+                  </Button>
+                </div>
+              </Form>
+            </ModalBody>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
   );
 }

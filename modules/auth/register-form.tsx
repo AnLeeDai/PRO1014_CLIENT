@@ -1,110 +1,245 @@
 "use client";
 
-import React, { useState } from "react";
-import { Form, Input, Button } from "@heroui/react";
+import React from "react";
+import { Form, Input, Button, addToast } from "@heroui/react";
+import { useForm, Controller } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { UserPlus } from "lucide-react";
 
+import PasswordInput from "@/components/password-input";
 import {
   regexUsername,
   regexPassword,
   regexEmail,
   regexPhone,
 } from "@/helpers/regex";
-import PasswordInput from "@/components/password-input";
+import { useRegisterUser } from "@/hooks/useRegisterUser";
+import { siteConfig } from "@/config/site";
+
+interface RegisterFormData {
+  username: string;
+  full_name: string;
+  email: string;
+  phone_number: string;
+  password: string;
+  password_confirm: string;
+  address: string;
+}
 
 export default function RegisterForm() {
-  const [isError, setIsError] = useState<{
-    username?: string;
-    full_name?: string;
-    email?: string;
-    phone_number?: string;
-    password?: string;
-    password_confirm?: string;
-    address?: string;
-  }>({});
+  const router = useRouter();
 
-  const handleSubmitForm = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const { control, handleSubmit, setError } = useForm<RegisterFormData>({
+    defaultValues: {
+      username: "",
+      full_name: "",
+      email: "",
+      phone_number: "",
+      password: "",
+      password_confirm: "",
+      address: "",
+    },
+  });
 
-    const formData = Object.fromEntries(new FormData(e.currentTarget));
+  const { mutate, isPending } = useRegisterUser({
+    onSuccess: () => {
+      addToast({
+        title: "Đăng ký thành công",
+        description: "Vui lòng đăng nhập để tiếp tục",
+        color: "success",
+      });
 
-    const data = {
-      username: formData.username as string,
-      password: formData.password as string,
-      password_confirm: formData.password_confirm as string,
-      full_name: formData.full_name as string,
-      email: formData.email as string,
-      phone_number: formData.phone_number as string,
-      role: "user",
-      address: formData.address as string,
-    };
+      router.replace(siteConfig.routes.login);
+    },
 
-    const errors: Record<string, string> = {};
+    onError: (error) => {
+      addToast({
+        title: "Đã xảy ra sự cố",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
 
-    if (!data.username || !regexUsername.test(data.username)) {
-      errors.username =
-        "Tên đăng nhập phải có ít nhất 6 ký tự, chỉ chứa chữ cái và số";
+  const onSubmit = (data: RegisterFormData) => {
+    let hasError = false;
+
+    if (!regexUsername.test(data.username)) {
+      setError("username", {
+        message:
+          "Tên đăng nhập phải có ít nhất 6 ký tự, chỉ chứa chữ cái và số",
+      });
+      hasError = true;
     }
 
     if (!data.full_name) {
-      errors.full_name = "Họ tên không được để trống";
+      setError("full_name", {
+        message: "Họ tên không được để trống",
+      });
+      hasError = true;
     }
 
-    if (!data.email || !regexEmail.test(data.email)) {
-      errors.email = "Email không hợp lệ";
+    if (!regexEmail.test(data.email)) {
+      setError("email", {
+        message: "Email không hợp lệ",
+      });
+      hasError = true;
     }
 
-    // chỉ validate số điện thoại nếu có
     if (data.phone_number && !regexPhone.test(data.phone_number)) {
-      errors.phone_number = "Số điện thoại không hợp lệ";
+      setError("phone_number", {
+        message: "Số điện thoại không hợp lệ",
+      });
+      hasError = true;
     }
 
-    if (!data.password || !regexPassword.test(data.password)) {
-      errors.password =
-        "Mật khẩu phải có ít nhất 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt";
+    if (!regexPassword.test(data.password)) {
+      setError("password", {
+        message:
+          "Mật khẩu phải có ít nhất 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt",
+      });
+      hasError = true;
     }
 
     if (data.password !== data.password_confirm) {
-      errors.password_confirm = "Mật khẩu xác nhận không khớp";
+      setError("password_confirm", {
+        message: "Mật khẩu xác nhận không khớp",
+      });
+      hasError = true;
     }
 
-    if (Object.keys(errors).length > 0) {
-      setIsError(errors);
-
-      return;
-    }
+    if (hasError) return;
 
     // Submit thành công
-    console.log("Đăng ký:", data);
+    mutate(data);
   };
 
   return (
     <Form
       className="space-y-5"
       validationBehavior="aria"
-      validationErrors={isError}
-      onSubmit={handleSubmitForm}
+      onSubmit={handleSubmit(onSubmit)}
     >
-      <div className="flex gap-2 w-full">
-        <Input isRequired label="Tên đăng nhập" name="username" />
-        <Input isRequired label="Họ và tên" name="full_name" />
+      <div className="flex flex-col md:flex-row gap-4 w-full">
+        <Controller
+          control={control}
+          name="username"
+          render={({ field, fieldState }) => (
+            <Input
+              {...field}
+              isRequired
+              errorMessage={fieldState.error?.message}
+              isInvalid={fieldState.invalid}
+              label="Tên đăng nhập"
+              validationBehavior="aria"
+            />
+          )}
+          rules={{ required: "Tên đăng nhập không được để trống" }}
+        />
+        <Controller
+          control={control}
+          name="full_name"
+          render={({ field, fieldState }) => (
+            <Input
+              {...field}
+              isRequired
+              errorMessage={fieldState.error?.message}
+              isInvalid={fieldState.invalid}
+              label="Họ và tên"
+              validationBehavior="aria"
+            />
+          )}
+          rules={{ required: "Họ tên không được để trống" }}
+        />
       </div>
 
-      <div className="flex gap-2 w-full">
-        <Input isRequired label="Email" name="email" type="email" />
-        <Input label="Số điện thoại" name="phone_number" />
+      <div className="flex flex-col md:flex-row gap-4 w-full">
+        <Controller
+          control={control}
+          name="email"
+          render={({ field, fieldState }) => (
+            <Input
+              {...field}
+              isRequired
+              errorMessage={fieldState.error?.message}
+              isInvalid={fieldState.invalid}
+              label="Email"
+              type="email"
+              validationBehavior="aria"
+            />
+          )}
+          rules={{ required: "Email không được để trống" }}
+        />
+        <Controller
+          control={control}
+          name="phone_number"
+          render={({ field, fieldState }) => (
+            <Input
+              {...field}
+              errorMessage={fieldState.error?.message}
+              isInvalid={fieldState.invalid}
+              label="Số điện thoại"
+              validationBehavior="aria"
+            />
+          )}
+        />
       </div>
 
       <div className="flex gap-2">
-        <PasswordInput isRequired label="Mật khẩu" name="password" />
-        <PasswordInput
-          isRequired
-          label="Xác nhận mật khẩu"
+        <Controller
+          control={control}
+          name="password"
+          render={({ field, fieldState }) => (
+            <PasswordInput
+              {...field}
+              isRequired
+              errorMessage={fieldState.error?.message}
+              isInvalid={fieldState.invalid}
+              label="Mật khẩu"
+              validationBehavior="aria"
+            />
+          )}
+          rules={{ required: "Mật khẩu không được để trống" }}
+        />
+        <Controller
+          control={control}
           name="password_confirm"
+          render={({ field, fieldState }) => (
+            <PasswordInput
+              {...field}
+              isRequired
+              errorMessage={fieldState.error?.message}
+              isInvalid={fieldState.invalid}
+              label="Xác nhận mật khẩu"
+              validationBehavior="aria"
+            />
+          )}
+          rules={{ required: "Xác nhận mật khẩu không được để trống" }}
         />
       </div>
-      <Input label="Địa chỉ" name="address" />
 
-      <Button className="w-full" color="primary" size="lg" type="submit">
+      <Controller
+        control={control}
+        name="address"
+        render={({ field, fieldState }) => (
+          <Input
+            {...field}
+            errorMessage={fieldState.error?.message}
+            isInvalid={fieldState.invalid}
+            label="Địa chỉ"
+            validationBehavior="aria"
+          />
+        )}
+      />
+
+      <Button
+        className="w-full"
+        color="primary"
+        isLoading={isPending}
+        size="lg"
+        startContent={<UserPlus />}
+        type="submit"
+      >
         Đăng ký
       </Button>
     </Form>

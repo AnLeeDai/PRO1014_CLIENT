@@ -1,48 +1,58 @@
-import { useState } from "react";
-import { Input, InputProps } from "@heroui/react";
-import { JSX } from "react/jsx-runtime";
+import { Input } from "@heroui/react";
+import { useState, forwardRef } from "react";
 
-export default function PasswordInput({
-  label,
-  placeholder,
-  size,
-  isRequired,
-  errorMessage,
-  validate,
-  name,
-}: InputProps) {
-  const [isVisible, setIsVisible] = useState<boolean>(false);
+type Props = React.ComponentProps<typeof Input>;
 
-  const toggleVisibility = () => setIsVisible(!isVisible);
+const PasswordInput = forwardRef<HTMLInputElement, Props>(
+  (
+    {
+      label,
+      placeholder,
+      size,
+      isRequired,
+      errorMessage,
+      validationBehavior,
+      isInvalid,
+      ...props
+    },
+    ref,
+  ) => {
+    const [isVisible, setIsVisible] = useState(false);
 
-  return (
-    <Input
-      className="w-full"
-      endContent={
-        <button
-          aria-label="toggle password visibility"
-          className="focus:outline-none"
-          type="button"
-          onClick={toggleVisibility}
-        >
-          {isVisible ? (
-            <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-          ) : (
-            <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
-          )}
-        </button>
-      }
-      errorMessage={errorMessage}
-      isRequired={isRequired}
-      label={label}
-      name={name}
-      placeholder={placeholder}
-      size={size}
-      type={isVisible ? "text" : "password"}
-      validate={validate}
-    />
-  );
-}
+    return (
+      <Input
+        {...props}
+        ref={ref}
+        endContent={
+          <button
+            aria-label="toggle password visibility"
+            className="focus:outline-none"
+            type="button"
+            onClick={() => setIsVisible(!isVisible)}
+          >
+            {isVisible ? (
+              <EyeSlashFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+            ) : (
+              <EyeFilledIcon className="text-2xl text-default-400 pointer-events-none" />
+            )}
+          </button>
+        }
+        errorMessage={errorMessage}
+        isInvalid={isInvalid}
+        isRequired={isRequired}
+        label={label}
+        placeholder={placeholder}
+        size={size}
+        type={isVisible ? "text" : "password"}
+        validationBehavior={validationBehavior}
+      />
+    );
+  },
+);
+
+PasswordInput.displayName = "PasswordInput";
+
+export default PasswordInput;
 
 export const EyeSlashFilledIcon = (
   props: JSX.IntrinsicAttributes & React.SVGProps<SVGSVGElement>,

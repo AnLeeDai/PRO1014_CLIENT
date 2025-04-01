@@ -6,11 +6,10 @@ import {
   CardBody,
   Chip,
   Image,
-  Button,
   Divider,
   Pagination,
 } from "@heroui/react";
-import { Truck, CheckCircle, CreditCard } from "lucide-react";
+import { Truck, CheckCircle } from "lucide-react";
 import { useState } from "react";
 
 import { siteConfig } from "@/config/site";
@@ -49,6 +48,7 @@ export default function OrderContainer() {
               <h2 className="font-semibold text-lg">Mã đơn hàng: {order.id}</h2>
               <p className="text-sm">Ngày mua: {order.date}</p>
             </div>
+
             <Chip
               color={order.status === "Đã giao" ? "success" : "warning"}
               startContent={
@@ -58,7 +58,6 @@ export default function OrderContainer() {
                   <Truck size={16} />
                 )
               }
-              variant="flat"
             >
               {order.status}
             </Chip>
@@ -88,12 +87,6 @@ export default function OrderContainer() {
             <div className="flex justify-between items-center">
               <p className="font-semibold text-base">Tổng cộng</p>
               <p className="font-bold text-lg">{formatVND(order.total)}</p>
-            </div>
-
-            <div className="flex justify-end">
-              <Button color="primary" startContent={<CreditCard size={16} />}>
-                Mua lại
-              </Button>
             </div>
           </CardBody>
         </Card>
