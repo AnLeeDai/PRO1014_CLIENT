@@ -41,7 +41,7 @@ export default function RootLayout({
         )}
       >
         <SpeedInsights />
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+        <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
           <main>{children}</main>
         </Providers>
       </body>
