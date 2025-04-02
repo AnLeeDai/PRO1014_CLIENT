@@ -51,7 +51,6 @@ export default function AvatarUser() {
       refetch();
       setIsLogin(false);
     },
-
     onError: (error) => {
       addToast({
         title: "Đã xảy ra sự cố",
@@ -62,9 +61,15 @@ export default function AvatarUser() {
   });
 
   useEffect(() => {
-    setIsLogin(localStorage.getItem("isLogin") === "true");
+    setIsLogin(Cookies.get("isLogin") === "true");
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") || "light";
+
+    setTheme(savedTheme);
+  }, [setTheme]);
 
   if (!mounted) return null;
 
@@ -152,7 +157,7 @@ export default function AvatarUser() {
                 key="theme"
                 description={`Chuyển sang chế độ ${theme === "dark" ? "sáng" : "tối"}`}
                 startContent={theme === "dark" ? <Sun /> : <Moon />}
-                textValue={`Chuyển sang chế độ ${theme === "dark" ? "sáng" : "tối"}`}
+                textValue={`Chế độ ${theme === "dark" ? "sáng" : "tối"}`}
               >
                 Chế độ {theme === "dark" ? "sáng" : "tối"}
               </DropdownItem>
@@ -188,7 +193,7 @@ export default function AvatarUser() {
                 key="theme"
                 description={`Chuyển sang chế độ ${theme === "dark" ? "sáng" : "tối"}`}
                 startContent={theme === "dark" ? <Sun /> : <Moon />}
-                textValue={`Chuyển sang chế độ ${theme === "dark" ? "sáng" : "tối"}`}
+                textValue={`Chế độ ${theme === "dark" ? "sáng" : "tối"}`}
               >
                 Chế độ {theme === "dark" ? "sáng" : "tối"}
               </DropdownItem>
