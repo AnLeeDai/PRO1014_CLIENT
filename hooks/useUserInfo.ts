@@ -1,5 +1,4 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 
 import { getUserInfo } from "../lib/api/user";
 
@@ -18,15 +17,8 @@ export const useUserInfo = (): UseQueryResult<
   ResponseSuccess<UserInfo>,
   Error
 > => {
-  const [enabled, setEnabled] = useState(false);
-
-  useEffect(() => {
-    setEnabled(localStorage.getItem("isLogin") === "true");
-  }, []);
-
   return useQuery<ResponseSuccess<UserInfo>, Error>({
     queryKey: ["user-info"],
     queryFn: getUserInfo,
-    enabled,
   });
 };

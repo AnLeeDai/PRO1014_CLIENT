@@ -5,6 +5,7 @@ import { Form, Input, Button, addToast } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { LogIn } from "lucide-react";
+import Cookies from "js-cookie";
 
 import { regexUsername, regexPassword } from "@/helpers/regex";
 import { siteConfig } from "@/config/site";
@@ -29,8 +30,8 @@ export default function LoginForm() {
 
   const { mutate, isPending } = useLoginUser({
     onSuccess: (data) => {
-      localStorage.setItem("role", data.data.role);
-      localStorage.setItem("isLogin", JSON.stringify(true));
+      Cookies.set("role", data.data.role, { path: "/" });
+      Cookies.set("isLogin", JSON.stringify(true), { path: "/" });
 
       addToast({
         title: "Đăng nhập thành công",

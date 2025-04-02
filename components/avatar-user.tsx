@@ -21,6 +21,7 @@ import {
   LogIn,
   UserPlus,
 } from "lucide-react";
+import Cookies from "js-cookie";
 
 import { siteConfig } from "@/config/site";
 import { useUserInfo } from "@/hooks/useUserInfo";
@@ -37,8 +38,8 @@ export default function AvatarUser() {
 
   const { mutate } = useLogoutUser({
     onSuccess: (data) => {
-      localStorage.removeItem("role");
-      localStorage.removeItem("isLogin");
+      Cookies.remove("role", { path: "/" });
+      Cookies.remove("isLogin", { path: "/" });
 
       addToast({
         title: "Đăng xuất thành công",
