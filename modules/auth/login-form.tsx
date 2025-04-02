@@ -30,8 +30,17 @@ export default function LoginForm() {
 
   const { mutate, isPending } = useLoginUser({
     onSuccess: (data) => {
-      Cookies.set("role", data.data.role, { path: "/" });
-      Cookies.set("isLogin", JSON.stringify(true), { path: "/" });
+      Cookies.set("role", data.data.role, {
+        path: "/",
+        secure: true,
+        sameSite: "None",
+      });
+
+      Cookies.set("isLogin", JSON.stringify(true), {
+        path: "/",
+        secure: true,
+        sameSite: "None",
+      });
 
       addToast({
         title: "Đăng nhập thành công",
