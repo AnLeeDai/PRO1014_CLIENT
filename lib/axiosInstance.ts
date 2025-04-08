@@ -4,7 +4,9 @@ import Cookies from "js-cookie";
 import { siteConfig } from "@/config/site";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost/PRO1014_SERVER/routes/",
+  baseURL:
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    "http://localhost/PRO1014_SERVER/routes/",
   headers: {
     "Content-Type": "application/json",
   },
