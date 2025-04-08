@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Card,
   CardHeader,
@@ -13,15 +11,17 @@ import { Eye } from "lucide-react";
 
 interface Product {
   id: string | number;
-  title: string;
-  image: string;
+  product_name: string;
+  thumbnail: string;
   price: string;
 }
 
 interface ProductGridProps {
-  data: Product[];
+  data: {
+    data: Product[];
+  };
   isLoading?: boolean;
-  onOpenModal?: () => void;
+  onOpenModal?: (product: Product) => void;
 }
 
 export default function ProductGrid({
@@ -29,7 +29,17 @@ export default function ProductGrid({
   isLoading = false,
   onOpenModal,
 }: ProductGridProps) {
-  if (isLoading || data.length === 0) {
+  console.log(data);
+
+  if (!isLoading && data.data.length === 0) {
+    return (
+      <div className="text-center py-10 text-lg font-medium">
+        Chưa có sản phẩm nào
+      </div>
+    );
+  }
+
+  if (isLoading || data.data.length === 0) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {Array.from({ length: 8 }).map((_, index) => (
@@ -39,13 +49,16 @@ export default function ProductGrid({
                 <div className="h-[250px] rounded-lg bg-default-300" />
               </Skeleton>
             </CardHeader>
+
             <CardBody className="p-2 space-y-2">
               <Skeleton className="rounded-lg">
                 <div className="h-6 rounded-lg bg-default-300 w-3/4" />
               </Skeleton>
+
               <Skeleton className="rounded-lg">
                 <div className="h-6 rounded-lg bg-default-300 w-1/2" />
               </Skeleton>
+
               <Skeleton className="rounded-lg">
                 <div className="h-8 rounded-lg bg-default-300" />
               </Skeleton>
@@ -58,31 +71,35 @@ export default function ProductGrid({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {data.map((item) => (
+      {data.data.map((item) => (
         <Card key={item.id}>
           <CardHeader className="p-2">
             <Image
               isBlurred
               isZoomed
-              alt={item.title}
+              alt={item.product_name}
               className="object-cover rounded-md"
               height={250}
-              src={item.image}
+              src={item.thumbnail}
               width={1920}
             />
           </CardHeader>
 
           <CardBody className="p-2">
-            <Tooltip content={item.title} size="lg">
-              <h3 className="text-lg font-bold line-clamp-1">{item.title}</h3>
+            <Tooltip content={item.product_name} size="lg">
+              <h3 className="text-lg font-bold line-clamp-1">
+                {item.product_name}
+              </h3>
             </Tooltip>
+
             <p className="text-lg mt-1">{item.price}</p>
+
             <Button
               className="mt-2 w-full"
               color="primary"
               size="md"
               startContent={<Eye />}
-              onPress={onOpenModal}
+              onPress={() => onOpenModal?.(item)}
             >
               Xem chi tiết
             </Button>

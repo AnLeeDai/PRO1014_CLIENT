@@ -30,7 +30,11 @@ axiosInstance.interceptors.response.use(
     const status = error.response?.status;
     const code = error.response?.data?.code;
 
-    if (code === "TOKEN_EXPIRED" || status === 440) {
+    if (
+      code === "TOKEN_EXPIRED" ||
+      code === "INVALID_TOKEN" ||
+      status === 440
+    ) {
       Cookies.remove("token");
       Cookies.remove("expires_in");
       Cookies.remove("isLogin");

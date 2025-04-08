@@ -94,7 +94,7 @@ export default function AvatarUser() {
             as="button"
             avatarProps={{
               isBordered: true,
-              src: data?.user.avatar_url,
+              src: data?.user.avatar_url || "",
             }}
             className="transition-transform"
             description={isLogin ? data?.user.email : "@guest"}

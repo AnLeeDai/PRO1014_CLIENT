@@ -67,7 +67,7 @@ export default function MyCartContainer() {
                   </div>
                 </Tab>
                 <Tab key="pickup" title="Tự đến lấy">
-                  <p className="text-base text-gray-500 italic">
+                  <p className="text-base italic">
                     Tự đến lấy hàng tại cửa hàng sẽ giúp bạn tiết kiệm phí vận
                     chuyển.
                   </p>

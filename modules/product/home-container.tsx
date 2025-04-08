@@ -15,11 +15,17 @@ import Banner from "../../components/banner";
 import { siteConfig } from "@/config/site";
 import ProductLayout from "@/app/(product)/layout";
 import Section from "@/components/section";
-import { products } from "@/constants/mockdata-product";
 import ProductGrid from "@/components/product-grid";
+import { useProduct } from "@/hooks/useProduct";
 
 export default function HomeContainer() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const { data: phoneData, isLoading: phoneLoading } = useProduct(7);
+  const { data: tabletData, isLoading: tabletLoading } = useProduct(8);
+  const { data: laptopData, isLoading: laptopLoading } = useProduct(9);
+  const { data: accessoriesData, isLoading: accessoriesLoading } =
+    useProduct(10);
 
   return (
     <>
@@ -47,7 +53,11 @@ export default function HomeContainer() {
             moreHref={siteConfig.routes.phone}
             title="Điện thoại"
           >
-            <ProductGrid data={products} onOpenModal={onOpen} />
+            <ProductGrid
+              data={{ data: phoneData?.data || [] }}
+              isLoading={phoneLoading}
+              onOpenModal={onOpen}
+            />
           </Section>
 
           <Section
@@ -55,7 +65,11 @@ export default function HomeContainer() {
             moreHref={siteConfig.routes.tablet}
             title="Máy tính bảng"
           >
-            <ProductGrid data={products} onOpenModal={onOpen} />
+            <ProductGrid
+              data={{ data: tabletData?.data || [] }}
+              isLoading={tabletLoading}
+              onOpenModal={onOpen}
+            />
           </Section>
 
           <Section
@@ -63,7 +77,11 @@ export default function HomeContainer() {
             moreHref={siteConfig.routes.laptop}
             title="Laptop"
           >
-            <ProductGrid data={products} onOpenModal={onOpen} />
+            <ProductGrid
+              data={{ data: laptopData?.data || [] }}
+              isLoading={laptopLoading}
+              onOpenModal={onOpen}
+            />
           </Section>
 
           <Section
@@ -71,7 +89,11 @@ export default function HomeContainer() {
             moreHref={siteConfig.routes.accessories}
             title="Phụ kiện"
           >
-            <ProductGrid data={products} onOpenModal={onOpen} />
+            <ProductGrid
+              data={{ data: accessoriesData?.data || [] }}
+              isLoading={accessoriesLoading}
+              onOpenModal={onOpen}
+            />
           </Section>
         </main>
       </ProductLayout>
