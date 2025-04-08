@@ -35,11 +35,12 @@ export const updateUserInfo = async (
   phone_number: string,
   address: string,
 ) => {
-  const res = await axiosInstance.put("?request=put-update-user", {
+  const res = await axiosInstance.put("?request=put-user", {
     full_name,
     email,
     phone_number,
     address,
+    user_id: Cookies.get("user_id") || "",
   });
 
   return res.data;
@@ -49,8 +50,9 @@ export const editAvatar = async (avatar: File) => {
   const formData = new FormData();
 
   formData.append("avatar", avatar);
+  formData.append("user_id", Cookies.get("user_id") || "");
 
-  const res = await axiosInstance.post("?request=put-edit-avatar", formData, {
+  const res = await axiosInstance.post("?request=post-avatar", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
