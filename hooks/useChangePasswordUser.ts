@@ -4,9 +4,9 @@ import { changePassword } from "@/lib/api/auth";
 import { ResponseErr, ResponseSuccess } from "@/types/api";
 
 interface ChangePasswordParams {
-  username: string;
   old_password: string;
   new_password: string;
+  password_confirm: string;
 }
 
 interface ChangePasswordResponse {
@@ -23,11 +23,15 @@ export const useChangePasswordUser = (
 ) => {
   return useMutation({
     mutationFn: ({
-      username,
       old_password,
       new_password,
+      password_confirm,
     }: ChangePasswordParams) =>
-      changePassword(username, old_password, new_password),
+      changePassword({
+        old_password,
+        new_password,
+        password_confirm,
+      }),
     ...options,
   });
 };

@@ -6,19 +6,18 @@ import {
   ModalHeader,
   ModalBody,
   Button,
-  Input,
   Form,
   addToast,
 } from "@heroui/react";
 import { useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { X, KeyRound } from "lucide-react";
+import Cookies from "js-cookie";
 
 import PasswordInput from "@/components/password-input";
-import { regexPassword, regexUsername } from "@/helpers/regex";
+import { regexPassword } from "@/helpers/regex";
 import { useChangePasswordUser } from "@/hooks/useChangePasswordUser";
 import { siteConfig } from "@/config/site";
-import { useLogoutUser } from "@/hooks/useLogoutUser";
 
 interface IModalChangePasswordProps {
   isOpen: boolean;
@@ -26,9 +25,9 @@ interface IModalChangePasswordProps {
 }
 
 interface ChangePasswordFormData {
-  username: string;
   old_password: string;
   new_password: string;
+  password_confirm: string;
 }
 
 export default function ModalChangePassword({
@@ -39,34 +38,40 @@ export default function ModalChangePassword({
 
   const { control, handleSubmit, setError } = useForm<ChangePasswordFormData>({
     defaultValues: {
-      username: "",
       old_password: "",
       new_password: "",
+      password_confirm: "",
     },
   });
 
-  const { mutate: mutateLogout } = useLogoutUser();
-
   const { mutate, isPending } = useChangePasswordUser({
     onSuccess: () => {
+      Cookies.remove("token");
+      Cookies.remove("expires_in");
+      Cookies.remove("isLogin");
+      Cookies.remove("user_id");
+
       addToast({
         title: "Đổi mật khẩu thành công",
         description: "Vui lòng đăng nhập lại để tiếp tục",
         color: "success",
       });
 
-      mutateLogout({});
-
-      localStorage.removeItem("role");
-      localStorage.removeItem("isLogin");
-
       router.replace(siteConfig.routes.login);
     },
 
     onError: (error) => {
+      console.log(error);
+
       addToast({
         title: "Đã xảy ra sự cố",
         description: error.message,
+        color: "danger",
+      });
+
+      addToast({
+        title: "Đã xảy ra sự cố",
+        description: Object.values(error.errors || {}).join("\n"),
         color: "danger",
       });
     },
@@ -83,14 +88,6 @@ export default function ModalChangePassword({
   const onSubmit = (data: ChangePasswordFormData) => {
     let hasError = false;
 
-    if (!regexUsername.test(data.username)) {
-      setError("username", {
-        message:
-          "Tên đăng nhập phải có ít nhất 6 ký tự, chỉ chứa chữ cái và số",
-      });
-      hasError = true;
-    }
-
     const oldPassErr = validatePassword(data.old_password, "Mật khẩu cũ");
 
     if (oldPassErr) {
@@ -102,6 +99,13 @@ export default function ModalChangePassword({
 
     if (newPassErr) {
       setError("new_password", { message: newPassErr });
+      hasError = true;
+    }
+
+    if (data.new_password !== data.password_confirm) {
+      setError("password_confirm", {
+        message: "Mật khẩu xác nhận không khớp",
+      });
       hasError = true;
     }
 
@@ -135,24 +139,6 @@ export default function ModalChangePassword({
               >
                 <Controller
                   control={control}
-                  name="username"
-                  render={({ field, fieldState }) => (
-                    <Input
-                      {...field}
-                      isRequired
-                      errorMessage={fieldState.error?.message}
-                      isInvalid={fieldState.invalid}
-                      label="Tên đăng nhập"
-                      size="md"
-                      type="text"
-                      validationBehavior="aria"
-                    />
-                  )}
-                  rules={{ required: "Tên đăng nhập không được để trống" }}
-                />
-
-                <Controller
-                  control={control}
                   name="old_password"
                   render={({ field, fieldState }) => (
                     <PasswordInput
@@ -183,6 +169,25 @@ export default function ModalChangePassword({
                     />
                   )}
                   rules={{ required: "Mật khẩu mới không được để trống" }}
+                />
+
+                <Controller
+                  control={control}
+                  name="password_confirm"
+                  render={({ field, fieldState }) => (
+                    <PasswordInput
+                      {...field}
+                      isRequired
+                      errorMessage={fieldState.error?.message}
+                      isInvalid={fieldState.invalid}
+                      label="Xác nhận mật khẩu mới"
+                      size="md"
+                      validationBehavior="aria"
+                    />
+                  )}
+                  rules={{
+                    required: "Vui lòng xác nhận lại mật khẩu mới",
+                  }}
                 />
 
                 <div className="w-full flex justify-end gap-5 mt-5">

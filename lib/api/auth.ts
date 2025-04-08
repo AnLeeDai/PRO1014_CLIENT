@@ -46,22 +46,12 @@ export const forgotPassword = async (
 };
 
 // change password
-export const changePassword = async (
-  username: string,
-  old_password: string,
-  new_password: string,
-) => {
-  const res = await axiosInstance.post("?request=post-change-password", {
-    username,
-    old_password,
-    new_password,
-  });
-
-  return res.data;
-};
-
-export const logoutUser = async () => {
-  const res = await axiosInstance.post("?request=post-logout");
+export const changePassword = async (data: {
+  old_password: string;
+  new_password: string;
+  password_confirm: string;
+}) => {
+  const res = await axiosInstance.post("?request=post-change-password", data);
 
   return res.data;
 };

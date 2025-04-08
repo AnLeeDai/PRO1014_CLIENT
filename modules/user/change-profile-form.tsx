@@ -50,6 +50,7 @@ export default function ChangeProfileForm() {
       });
       refetch();
     },
+
     onError: (error) => {
       addToast({
         title: "Đã xảy ra sự cố",
