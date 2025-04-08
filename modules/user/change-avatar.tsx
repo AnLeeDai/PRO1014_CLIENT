@@ -33,8 +33,6 @@ export default function ChangeAvatar() {
       refetch();
       setFile(null);
       setPreview(null);
-
-      console.log(res);
     },
 
     onError: (err) => {

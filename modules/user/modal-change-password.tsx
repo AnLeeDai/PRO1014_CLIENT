@@ -61,8 +61,6 @@ export default function ModalChangePassword({
     },
 
     onError: (error) => {
-      console.log(error);
-
       addToast({
         title: "Đã xảy ra sự cố",
         description: error.message,
