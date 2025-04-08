@@ -13,6 +13,7 @@ interface Filter {
 export interface ResponseErr {
   success: boolean;
   message: string;
+  errors?: Record<string, string>;
 }
 
 export interface ResponseSuccess<T> {

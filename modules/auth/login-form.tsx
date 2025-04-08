@@ -30,13 +30,25 @@ export default function LoginForm() {
 
   const { mutate, isPending } = useLoginUser({
     onSuccess: (data) => {
-      Cookies.set("role", data.data.role, {
+      Cookies.set("token", data.token, {
+        path: "/",
+        secure: true,
+        sameSite: "None",
+      });
+
+      Cookies.set("expires_in", data.expires_in.toString(), {
         path: "/",
         secure: true,
         sameSite: "None",
       });
 
       Cookies.set("isLogin", JSON.stringify(true), {
+        path: "/",
+        secure: true,
+        sameSite: "None",
+      });
+
+      Cookies.set("user_id", JSON.stringify(data.user.user_id), {
         path: "/",
         secure: true,
         sameSite: "None",

@@ -50,6 +50,7 @@ export default function ChangeProfileForm() {
       });
       refetch();
     },
+
     onError: (error) => {
       addToast({
         title: "Đã xảy ra sự cố",
@@ -60,12 +61,12 @@ export default function ChangeProfileForm() {
   });
 
   useEffect(() => {
-    if (data?.data) {
+    if (data?.user) {
       reset({
-        full_name: data.data.full_name || "",
-        email: data.data.email || "",
-        phone_number: data.data.phone_number || "",
-        address: data.data.address || "",
+        full_name: data.user.full_name || "",
+        email: data.user.email || "",
+        phone_number: data.user.phone_number || "",
+        address: data.user.address || "",
       });
     }
   }, [data, reset]);
@@ -119,7 +120,7 @@ export default function ChangeProfileForm() {
                   isDisabled
                   label="Tên đăng nhập"
                   name="username"
-                  value={data?.data.username}
+                  value={data?.user.username}
                 />
 
                 <Controller

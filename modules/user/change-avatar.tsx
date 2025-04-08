@@ -71,7 +71,7 @@ export default function ChangeAvatar() {
           className="w-44 h-44"
           src={
             preview ||
-            data?.data.avatar_url ||
+            data?.user.avatar_url ||
             "https://avatars.githubusercontent.com/u/12345678?v=4"
           }
         />

@@ -25,7 +25,6 @@ import Cookies from "js-cookie";
 
 import { siteConfig } from "@/config/site";
 import { useUserInfo } from "@/hooks/useUserInfo";
-import { useLogoutUser } from "@/hooks/useLogoutUser";
 
 export default function AvatarUser() {
   const [mounted, setMounted] = useState(false);
@@ -34,31 +33,22 @@ export default function AvatarUser() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
-  const { data, refetch } = useUserInfo();
+  const { data } = useUserInfo();
 
-  const { mutate } = useLogoutUser({
-    onSuccess: (data) => {
-      Cookies.remove("role", { path: "/" });
-      Cookies.remove("isLogin", { path: "/" });
+  const handlerLogout = () => {
+    Cookies.remove("isLogin");
+    Cookies.remove("token");
+    Cookies.remove("expires_in");
+    Cookies.remove("user_id");
 
-      addToast({
-        title: "Đăng xuất thành công",
-        description: data.message,
-        color: "success",
-      });
+    addToast({
+      title: "Đăng xuất thành công",
+      description: "Bạn đã đăng xuất khỏi tài khoản của mình",
+      color: "success",
+    });
 
-      router.replace(siteConfig.routes.home);
-      refetch();
-      setIsLogin(false);
-    },
-    onError: (error) => {
-      addToast({
-        title: "Đã xảy ra sự cố",
-        description: error.message,
-        color: "danger",
-      });
-    },
-  });
+    router.push(siteConfig.routes.login);
+  };
 
   useEffect(() => {
     setIsLogin(Cookies.get("isLogin") === "true");
@@ -79,7 +69,7 @@ export default function AvatarUser() {
       orders: () => router.push(siteConfig.routes.order),
       cart: () => router.push(siteConfig.routes.cart),
       theme: () => setTheme(theme === "dark" ? "light" : "dark"),
-      logout: () => mutate({}),
+      logout: () => handlerLogout(),
       login: () => router.push(siteConfig.routes.login),
       register: () => router.push(siteConfig.routes.register),
     };
@@ -104,13 +94,11 @@ export default function AvatarUser() {
             as="button"
             avatarProps={{
               isBordered: true,
-              src:
-                data?.data.avatar_url ||
-                "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+              src: data?.user.avatar_url,
             }}
             className="transition-transform"
-            description={isLogin ? data?.data.email : "@guest"}
-            name={isLogin ? data?.data.full_name : "Khách"}
+            description={isLogin ? data?.user.email : "@guest"}
+            name={isLogin ? data?.user.full_name : "Khách"}
           />
         </DropdownTrigger>
 
@@ -127,7 +115,7 @@ export default function AvatarUser() {
                 textValue="Thông tin người dùng"
               >
                 <p className="font-bold">{greeting}</p>
-                <p className="font-bold">{data?.data.full_name}</p>
+                <p className="font-bold">{data?.user.full_name}</p>
               </DropdownItem>
               <DropdownItem
                 key="settings"
