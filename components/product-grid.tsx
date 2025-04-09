@@ -6,11 +6,15 @@ import {
   Image,
   Skeleton,
   Tooltip,
+  useDisclosure,
 } from "@heroui/react";
 import { Eye } from "lucide-react";
+import { useState } from "react";
+
+import ModalDetailProduct from "./modal-detail-product";
 
 interface Product {
-  id: string | number;
+  id: number;
   product_name: string;
   thumbnail: string;
   price: string;
@@ -21,15 +25,16 @@ interface ProductGridProps {
     data: Product[];
   };
   isLoading?: boolean;
-  onOpenModal?: (product: Product) => void;
 }
 
 export default function ProductGrid({
   data,
   isLoading = false,
-  onOpenModal,
 }: ProductGridProps) {
-  console.log(data);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [selectedProductId, setSelectedProductId] = useState<
+    number | undefined
+  >();
 
   if (!isLoading && data.data.length === 0) {
     return (
@@ -69,43 +74,61 @@ export default function ProductGrid({
     );
   }
 
+  const handleModalClose = () => {
+    setSelectedProductId(undefined);
+  };
+
+  const handleViewDetail = (productId: number | undefined) => {
+    setSelectedProductId(productId);
+    onOpen();
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {data.data.map((item) => (
-        <Card key={item.id}>
-          <CardHeader className="p-2">
-            <Image
-              isBlurred
-              isZoomed
-              alt={item.product_name}
-              className="object-cover rounded-md"
-              height={250}
-              src={item.thumbnail}
-              width={1920}
-            />
-          </CardHeader>
+    <>
+      <ModalDetailProduct
+        isOpen={isOpen}
+        productId={selectedProductId ?? 0}
+        onClose={handleModalClose}
+        onOpenChange={onOpenChange}
+      />
 
-          <CardBody className="p-2">
-            <Tooltip content={item.product_name} size="lg">
-              <h3 className="text-lg font-bold line-clamp-1">
-                {item.product_name}
-              </h3>
-            </Tooltip>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {data.data.map((item) => (
+          <Card key={item.id}>
+            <CardHeader className="p-2">
+              <Image
+                isBlurred
+                isZoomed
+                alt={item.product_name}
+                className="object-cover rounded-md"
+                height={250}
+                src={item.thumbnail}
+                width={1920}
+              />
+            </CardHeader>
 
-            <p className="text-lg mt-1">{item.price}</p>
+            <CardBody className="p-2">
+              <Tooltip content={item.product_name} size="lg">
+                <h3 className="text-lg font-bold line-clamp-1">
+                  {item.product_name}
+                </h3>
+              </Tooltip>
 
-            <Button
-              className="mt-2 w-full"
-              color="primary"
-              size="md"
-              startContent={<Eye />}
-              onPress={() => onOpenModal?.(item)}
-            >
-              Xem chi tiết
-            </Button>
-          </CardBody>
-        </Card>
-      ))}
-    </div>
+              <p className="text-lg mt-1">₫{item.price}</p>
+
+              <Button
+                className="mt-2 w-full"
+                color="primary"
+                size="md"
+                startContent={<Eye />}
+                onPress={() => handleViewDetail(item.id)}
+              >
+                Xem chi tiết
+              </Button>
+            </CardBody>
+          </Card>
+        ))}
+      </div>
+    </>
   );
 }

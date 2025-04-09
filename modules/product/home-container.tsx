@@ -7,9 +7,8 @@ import {
   Headphones,
   Search,
 } from "lucide-react";
-import { useDisclosure, Input } from "@heroui/react";
+import { Input } from "@heroui/react";
 
-import ModalDetailProduct from "../../components/modal-detail-product";
 import Banner from "../../components/banner";
 
 import { siteConfig } from "@/config/site";
@@ -19,8 +18,6 @@ import ProductGrid from "@/components/product-grid";
 import { useProduct } from "@/hooks/useProduct";
 
 export default function HomeContainer() {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
   const { data: phoneData, isLoading: phoneLoading } = useProduct(7);
   const { data: tabletData, isLoading: tabletLoading } = useProduct(8);
   const { data: laptopData, isLoading: laptopLoading } = useProduct(9);
@@ -29,12 +26,6 @@ export default function HomeContainer() {
 
   return (
     <>
-      <ModalDetailProduct
-        isOpen={isOpen}
-        productId={1}
-        onOpenChange={onOpenChange}
-      />
-
       <ProductLayout>
         <div className="max-w-4xl mx-auto py-4 px-4">
           <Input
@@ -56,7 +47,6 @@ export default function HomeContainer() {
             <ProductGrid
               data={{ data: phoneData?.data || [] }}
               isLoading={phoneLoading}
-              onOpenModal={onOpen}
             />
           </Section>
 
@@ -68,7 +58,6 @@ export default function HomeContainer() {
             <ProductGrid
               data={{ data: tabletData?.data || [] }}
               isLoading={tabletLoading}
-              onOpenModal={onOpen}
             />
           </Section>
 
@@ -80,7 +69,6 @@ export default function HomeContainer() {
             <ProductGrid
               data={{ data: laptopData?.data || [] }}
               isLoading={laptopLoading}
-              onOpenModal={onOpen}
             />
           </Section>
 
@@ -92,7 +80,6 @@ export default function HomeContainer() {
             <ProductGrid
               data={{ data: accessoriesData?.data || [] }}
               isLoading={accessoriesLoading}
-              onOpenModal={onOpen}
             />
           </Section>
         </main>

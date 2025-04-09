@@ -38,6 +38,10 @@ export interface GetAllProductResponse {
   data: Product[];
 }
 
+export interface GetAllProductByIDResponse {
+  product: Product;
+}
+
 export const getAllProduct = async (
   category_id?: number,
 ): Promise<GetAllProductResponse> => {
@@ -46,6 +50,21 @@ export const getAllProduct = async (
     {
       params: {
         ...(category_id && { category_id }),
+      },
+    },
+  );
+
+  return res.data;
+};
+
+export const getProductByID = async (
+  id?: number,
+): Promise<GetAllProductByIDResponse> => {
+  const res = await axiosInstance.get<GetAllProductByIDResponse>(
+    "?request=get-product-by-id",
+    {
+      params: {
+        id,
       },
     },
   );
