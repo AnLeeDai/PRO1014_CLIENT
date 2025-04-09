@@ -117,7 +117,7 @@ export default function ProductListLayout({
       </div>
 
       {filtered.length === 0 && !loading ? (
-        <div className="text-center text-gray-500 py-10 text-lg font-medium">
+        <div className="text-center py-10 text-lg font-medium">
           Không có sản phẩm nào phù hợp
         </div>
       ) : (

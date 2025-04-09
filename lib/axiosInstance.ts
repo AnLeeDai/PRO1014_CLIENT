@@ -5,7 +5,7 @@ import { siteConfig } from "@/config/site";
 
 const axiosInstance = axios.create({
   baseURL:
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    // process.env.NEXT_PUBLIC_API_BASE_URL ||
     "http://localhost/PRO1014_SERVER/routes/",
   headers: {
     "Content-Type": "application/json",
@@ -30,7 +30,11 @@ axiosInstance.interceptors.response.use(
     const status = error.response?.status;
     const code = error.response?.data?.code;
 
-    if (code === "TOKEN_EXPIRED" || status === 440) {
+    if (
+      code === "TOKEN_EXPIRED" ||
+      code === "INVALID_TOKEN" ||
+      status === 440
+    ) {
       Cookies.remove("token");
       Cookies.remove("expires_in");
       Cookies.remove("isLogin");
