@@ -13,8 +13,6 @@ export default function ProductListLayout({
   data,
   isLoading,
 }: ProductListLayoutProps) {
-  console.log(data?.filters);
-
   const brandList = [
     { key: "Samsung", label: "Samsung" },
     { key: "Apple", label: "Apple" },
