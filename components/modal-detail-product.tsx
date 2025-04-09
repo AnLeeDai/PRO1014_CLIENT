@@ -93,7 +93,10 @@ export default function ModalDetailProduct({
                       />
 
                       <div className="space-y-4">
-                        <p className="font-bold text-xl">₫{data?.price}</p>
+                        <p className="font-bold text-xl">
+                          ₫
+                          {parseInt(data?.price || "0").toLocaleString("vi-VN")}
+                        </p>
 
                         <Tooltip content={data?.short_description} size="lg">
                           <p className="text-sm leading-relaxed line-clamp-3">
