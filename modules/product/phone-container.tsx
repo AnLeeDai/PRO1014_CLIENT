@@ -1,7 +1,8 @@
 "use client";
 
 import { Input, Pagination, Select, SelectItem } from "@heroui/react";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useDebounce } from "use-debounce";
 
 import ProductGrid from "@/components/product-grid";
 import { useProduct } from "@/hooks/useProduct";
@@ -20,23 +21,51 @@ const priceList = [
   { key: "30000000", label: "Trên 20 triệu" },
 ];
 
+type FilterForm = {
+  search: string;
+  brand: string;
+  price: string;
+  page: number;
+};
+
 export default function PhoneContainer() {
-  const [search, setSearch] = useState("");
-  const [brand, setBrand] = useState<string | undefined>();
-  const [minPrice, setMinPrice] = useState<number | undefined>();
-  const [maxPrice, setMaxPrice] = useState<number | undefined>();
-  const [priceSelectedKey, setPriceSelectedKey] = useState<
-    string | undefined
-  >();
-  const [page, setPage] = useState<number>(1);
+  const { register, watch, setValue } = useForm<FilterForm>({
+    defaultValues: {
+      search: "",
+      brand: "all",
+      price: "all",
+      page: 1,
+    },
+  });
+
+  const watchedSearch = watch("search");
+  const watchedBrand = watch("brand");
+  const watchedPrice = watch("price");
+  const watchedPage = watch("page");
+
+  const [debouncedSearch] = useDebounce(watchedSearch, 500);
+
+  let minPrice: number | undefined;
+  let maxPrice: number | undefined;
+
+  if (watchedPrice === "10000000") {
+    maxPrice = 10000000;
+  } else if (watchedPrice === "20000000") {
+    minPrice = 10000000;
+    maxPrice = 20000000;
+  } else if (watchedPrice === "30000000") {
+    minPrice = 20000000;
+  }
+
+  const brand = watchedBrand !== "all" ? watchedBrand : undefined;
 
   const { data, isLoading, isFetching } = useProduct(
     7,
-    search,
+    debouncedSearch,
     minPrice,
     maxPrice,
     brand,
-    page,
+    watchedPage,
   );
 
   return (
@@ -46,16 +75,12 @@ export default function PhoneContainer() {
         <Select
           label="Hãng"
           placeholder="Chọn hãng"
-          selectedKeys={brand ? new Set([brand]) : new Set(["all"])}
-          onSelectionChange={(keySet) => {
-            const selected = Array.from(keySet)[0] as string;
+          selectedKeys={new Set([watchedBrand])}
+          onSelectionChange={(keys) => {
+            const value = Array.from(keys)[0] as string;
 
-            if (selected === "all") {
-              setBrand(undefined);
-            } else {
-              setBrand(selected);
-            }
-            setPage(1);
+            setValue("brand", value);
+            setValue("page", 1);
           }}
         >
           {brandList.map((brand) => (
@@ -67,38 +92,20 @@ export default function PhoneContainer() {
         <Input
           label="Tìm kiếm"
           placeholder="Nhập tên sản phẩm..."
-          value={search}
-          onBlur={() => setPage(1)}
-          onChange={(e) => setSearch(e.target.value)}
+          {...register("search")}
+          onBlur={() => setValue("page", 1)}
         />
 
-        {/* Khoảng giá */}
+        {/* Giá */}
         <Select
           label="Khoảng giá"
           placeholder="Chọn khoảng giá"
-          selectedKeys={
-            priceSelectedKey ? new Set([priceSelectedKey]) : new Set(["all"])
-          }
+          selectedKeys={new Set([watchedPrice])}
           onSelectionChange={(keys) => {
-            const selectedKey = Array.from(keys as Set<React.Key>)[0] as string;
+            const value = Array.from(keys)[0] as string;
 
-            setPriceSelectedKey(selectedKey);
-
-            if (selectedKey === "all") {
-              setMinPrice(undefined);
-              setMaxPrice(undefined);
-            } else if (selectedKey === "10000000") {
-              setMinPrice(undefined);
-              setMaxPrice(10000000);
-            } else if (selectedKey === "20000000") {
-              setMinPrice(10000000);
-              setMaxPrice(20000000);
-            } else if (selectedKey === "30000000") {
-              setMinPrice(20000000);
-              setMaxPrice(undefined);
-            }
-
-            setPage(1);
+            setValue("price", value);
+            setValue("page", 1);
           }}
         >
           {priceList.map((price) => (
@@ -107,17 +114,19 @@ export default function PhoneContainer() {
         </Select>
       </div>
 
+      {/* Grid sản phẩm */}
       <ProductGrid
         data={{ data: data?.data || [] }}
         isLoading={isLoading || isFetching}
       />
 
+      {/* Phân trang */}
       <div className="flex justify-center pt-4">
         <Pagination
           showControls
-          page={page}
+          page={watchedPage}
           total={data?.pagination?.total_pages || 1}
-          onChange={setPage}
+          onChange={(p) => setValue("page", p)}
         />
       </div>
     </div>
