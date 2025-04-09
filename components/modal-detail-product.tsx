@@ -12,6 +12,7 @@ import {
   Skeleton,
 } from "@heroui/react";
 import { BaggageClaim, ShoppingCart } from "lucide-react";
+import { useState } from "react";
 
 import { useProductByID } from "@/hooks/useProductByID";
 
@@ -33,10 +34,16 @@ export default function ModalDetailProduct({
 
   const data = productData?.product;
 
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+
   if (!isOpen) return null;
 
   const handleImageClick = (img_url: string) => {
-    console.log(img_url);
+    setZoomedImage(img_url);
+  };
+
+  const closeZoom = () => {
+    setZoomedImage(null);
   };
 
   return (
@@ -94,76 +101,13 @@ export default function ModalDetailProduct({
                           </p>
                         </Tooltip>
 
-                        {/* <div>
-                        {data.storageOptions?.length && (
-                          <div>
-                            <h4 className="text-sm font-medium mb-2">
-                              Chọn dung lượng:
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {data.storageOptions.map((option) => (
-                                <Chip
-                                  key={option}
-                                  className="cursor-pointer"
-                                  color={
-                                    selectedStorage === option
-                                      ? "primary"
-                                      : "default"
-                                  }
-                                  variant={
-                                    selectedStorage === option
-                                      ? "solid"
-                                      : "faded"
-                                  }
-                                  onClick={() => setSelectedStorage(option)}
-                                >
-                                  {option}
-                                </Chip>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {data.colorOptions?.length && (
-                          <div>
-                            <h4 className="text-sm font-medium mb-2">
-                              Chọn màu sắc:
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {data.colorOptions.map((color) => (
-                                <Chip
-                                  key={color}
-                                  className="cursor-pointer capitalize"
-                                  color={
-                                    selectedColor === color
-                                      ? "primary"
-                                      : "default"
-                                  }
-                                  variant={
-                                    selectedColor === color ? "solid" : "faded"
-                                  }
-                                  onClick={() => setSelectedColor(color)}
-                                >
-                                  {color}
-                                </Chip>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div> */}
-
                         {/* Info list */}
                         <ul
                           dangerouslySetInnerHTML={{
                             __html: data?.extra_info || "",
                           }}
                           className="text-sm list-disc pl-5 space-y-1 mt-4"
-                        >
-                          {/* <li>Bảo hành chính hãng 12 tháng</li>
-                        <li>Hỗ trợ trả góp 0% qua thẻ tín dụng</li>
-                        <li>Tặng kèm ốp lưng + miếng dán cường lực</li>
-                        <li>Giao hàng tận nơi, kiểm tra trước khi nhận</li> */}
-                        </ul>
+                        />
 
                         <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
                           <Button
@@ -224,6 +168,26 @@ export default function ModalDetailProduct({
           )}
         </ModalContent>
       </Modal>
+
+      {zoomedImage && (
+        <Modal backdrop="blur" isOpen={true} size="4xl" onClose={closeZoom}>
+          <ModalContent>
+            <ModalHeader />
+
+            <ModalBody>
+              <div className="flex justify-center">
+                <Image
+                  alt="Zoomed Image"
+                  height={768}
+                  radius="sm"
+                  src={zoomedImage}
+                  width={1024}
+                />
+              </div>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
     </>
   );
 }
