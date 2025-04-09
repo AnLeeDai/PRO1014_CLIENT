@@ -88,8 +88,9 @@ export default function ModalDetailProduct({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                       <Image
                         alt={data?.thumbnail}
-                        height={430}
+                        height={500}
                         src={data?.thumbnail}
+                        width={800}
                       />
 
                       <div className="space-y-4">
@@ -146,9 +147,9 @@ export default function ModalDetailProduct({
                               key={idx}
                               alt={`${data?.product_name} ${idx + 1}`}
                               className="cursor-pointer object-cover transition-transform duration-200 hover:scale-105"
-                              height={350}
+                              height={200}
                               src={img}
-                              width={1280}
+                              width={300}
                               onClick={() => handleImageClick(img)}
                             />
                           ))}

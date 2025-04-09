@@ -100,10 +100,9 @@ export default function ProductGrid({
                 isBlurred
                 isZoomed
                 alt={item.product_name}
-                className="object-cover rounded-md"
-                height={250}
+                height={200}
                 src={item.thumbnail}
-                width={1920}
+                width={300}
               />
             </CardHeader>
 
