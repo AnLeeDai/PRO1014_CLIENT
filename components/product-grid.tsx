@@ -100,10 +100,9 @@ export default function ProductGrid({
                 isBlurred
                 isZoomed
                 alt={item.product_name}
-                className="object-cover rounded-md"
-                height={250}
+                height={200}
                 src={item.thumbnail}
-                width={1920}
+                width={300}
               />
             </CardHeader>
 
@@ -114,7 +113,9 @@ export default function ProductGrid({
                 </h3>
               </Tooltip>
 
-              <p className="text-lg mt-1">₫{item.price}</p>
+              <p className="text-lg mt-1">
+                ₫{parseInt(item.price).toLocaleString("vi-VN")}
+              </p>
 
               <Button
                 className="mt-2 w-full"

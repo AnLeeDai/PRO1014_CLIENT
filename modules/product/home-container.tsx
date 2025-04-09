@@ -29,6 +29,7 @@ export default function HomeContainer() {
       <ProductLayout>
         <div className="max-w-4xl mx-auto py-4 px-4">
           <Input
+            disabled
             className="max-w-full"
             placeholder="Tìm kiếm sản phẩm..."
             size="lg"

@@ -8,5 +8,6 @@ export const useProductByID = (
   return useQuery<GetAllProductByIDResponse, Error>({
     queryKey: ["product-by-id", id],
     queryFn: () => getProductByID(id),
+    enabled: !!id && id > 0,
   });
 };

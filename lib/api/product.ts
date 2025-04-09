@@ -44,12 +44,22 @@ export interface GetAllProductByIDResponse {
 
 export const getAllProduct = async (
   category_id?: number,
+  search?: string,
+  min_price?: number,
+  max_price?: number,
+  brand?: string,
+  page: number = 1,
 ): Promise<GetAllProductResponse> => {
   const res = await axiosInstance.get<GetAllProductResponse>(
     "?request=get-products",
     {
       params: {
         ...(category_id && { category_id }),
+        ...(search && { search }),
+        ...(min_price && { min_price }),
+        ...(max_price && { max_price }),
+        ...(brand && { brand }),
+        page,
       },
     },
   );
