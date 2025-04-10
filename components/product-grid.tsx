@@ -102,7 +102,7 @@ export default function ProductGrid({
                 alt={item.product_name}
                 height={200}
                 src={item.thumbnail}
-                width={300}
+                width={500}
               />
             </CardHeader>
 
