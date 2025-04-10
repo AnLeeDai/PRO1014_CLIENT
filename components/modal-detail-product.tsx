@@ -10,11 +10,19 @@ import {
   Tooltip,
   Spacer,
   Skeleton,
+  Input,
+  addToast,
 } from "@heroui/react";
-import { BaggageClaim, ShoppingCart } from "lucide-react";
+import {
+  BaggageClaim,
+  ListOrdered,
+  ShoppingCart,
+  TicketPercent,
+} from "lucide-react";
 import { useState } from "react";
 
 import { useProductByID } from "@/hooks/useProductByID";
+import { useOrderNow } from "@/hooks/useBuyNow";
 
 interface IModalDetailProductProps {
   isOpen: boolean;
@@ -32,9 +40,29 @@ export default function ModalDetailProduct({
   const { data: productData, isLoading: productLoading } =
     useProductByID(productId);
 
+  const { mutate: orderNow, isPending: orderNowPending } = useOrderNow({
+    onSuccess: (data) => {
+      addToast({
+        title: "Đặt hàng thành công, vui lòng chờ admin xác nhận",
+        description: data.message,
+        color: "success",
+      });
+    },
+
+    onError: (error) => {
+      addToast({
+        title: "Có lỗi xảy ra trong quá trình đặt hàng",
+        description: error.message,
+        color: "danger",
+      });
+    },
+  });
+
   const data = productData?.product;
 
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [discountCode, setDiscountCode] = useState("");
 
   if (!isOpen) return null;
 
@@ -44,6 +72,17 @@ export default function ModalDetailProduct({
 
   const closeZoom = () => {
     setZoomedImage(null);
+  };
+
+  const handleBuyNow = (productId: number | undefined) => {
+    if (!productId) return;
+
+    orderNow({
+      type: "buy_now",
+      product_id: productId,
+      quantity: quantity,
+      discount_code: discountCode,
+    });
   };
 
   return (
@@ -105,13 +144,38 @@ export default function ModalDetailProduct({
                           </p>
                         </Tooltip>
 
-                        {/* Info list */}
                         <ul
                           dangerouslySetInnerHTML={{
                             __html: data?.extra_info || "",
                           }}
                           className="text-sm list-disc pl-5 space-y-1 mt-4"
                         />
+
+                        <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                          <Input
+                            className="flex 1"
+                            label="Số lượng"
+                            min={1}
+                            placeholder="Nhập mã giảm giá"
+                            size="md"
+                            startContent={<ListOrdered />}
+                            type="number"
+                            value={quantity.toString()}
+                            onChange={(e) =>
+                              setQuantity(parseInt(e.target.value) || 1)
+                            }
+                          />
+
+                          <Input
+                            className="flex 1"
+                            label="Mã giảm giá (voucher)"
+                            placeholder="Nhập mã giảm giá"
+                            size="md"
+                            startContent={<TicketPercent />}
+                            value={discountCode}
+                            onChange={(e) => setDiscountCode(e.target.value)}
+                          />
+                        </div>
 
                         <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
                           <Button
@@ -123,12 +187,14 @@ export default function ModalDetailProduct({
                           >
                             Thêm vào giỏ hàng
                           </Button>
+
                           <Button
                             fullWidth
                             color="primary"
+                            isLoading={orderNowPending}
                             size="lg"
                             startContent={<ShoppingCart />}
-                            onPress={onClose}
+                            onPress={() => handleBuyNow(data?.id)}
                           >
                             Mua ngay
                           </Button>
@@ -138,7 +204,6 @@ export default function ModalDetailProduct({
 
                     <Spacer y={5} />
 
-                    {/* Gallery */}
                     <Accordion variant="bordered">
                       <AccordionItem key="gallery" title="Hình ảnh khác:">
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
@@ -157,7 +222,6 @@ export default function ModalDetailProduct({
                       </AccordionItem>
                     </Accordion>
 
-                    {/* Mô tả chi tiết */}
                     <Accordion variant="bordered">
                       <AccordionItem key="desc" title="Mô tả chi tiết:">
                         <div className="mt-4 text-sm">
@@ -177,7 +241,6 @@ export default function ModalDetailProduct({
         <Modal backdrop="blur" isOpen={true} size="4xl" onClose={closeZoom}>
           <ModalContent>
             <ModalHeader />
-
             <ModalBody>
               <div className="flex justify-center">
                 <Image

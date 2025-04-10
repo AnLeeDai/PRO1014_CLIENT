@@ -7,19 +7,15 @@ import {
   Chip,
   Image,
   Divider,
-  Pagination,
 } from "@heroui/react";
 import { Truck, CheckCircle } from "lucide-react";
-import { useState } from "react";
 
 import { siteConfig } from "@/config/site";
 import Forward from "@/components/forward";
-import { orders } from "@/constants/mockdata-order";
-
-const ORDERS_PER_PAGE = 3;
+import { useOrderHistory } from "@/hooks/useOrderHistory";
 
 export default function OrderContainer() {
-  const [currentPage, setCurrentPage] = useState(1);
+  const { data, isLoading } = useOrderHistory();
 
   const formatVND = (value: number) =>
     new Intl.NumberFormat("vi-VN", {
@@ -28,11 +24,15 @@ export default function OrderContainer() {
       minimumFractionDigits: 0,
     }).format(value);
 
-  const totalPages = Math.ceil(orders.length / ORDERS_PER_PAGE);
-  const currentOrders = orders.slice(
-    (currentPage - 1) * ORDERS_PER_PAGE,
-    currentPage * ORDERS_PER_PAGE,
-  );
+  if (isLoading) return <p>Đang tải đơn hàng...</p>;
+
+  if (data?.orders.length === 0) {
+    return (
+      <div className="text-center py-10 text-lg font-medium">
+        Bạn chưa có đơn hàng nào
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -41,44 +41,44 @@ export default function OrderContainer() {
         <h1 className="text-3xl font-bold mb-4">Lịch sử mua hàng</h1>
       </div>
 
-      {currentOrders.map((order) => (
+      {data?.orders.map((order) => (
         <Card key={order.id}>
           <CardHeader className="flex justify-between items-center">
             <div>
               <h2 className="font-semibold text-lg">Mã đơn hàng: {order.id}</h2>
-              <p className="text-sm">Ngày mua: {order.date}</p>
+              <p className="text-sm">Ngày mua: {order.created_at}</p>
             </div>
 
             <Chip
-              color={order.status === "Đã giao" ? "success" : "warning"}
+              color={order.status === "completed" ? "success" : "warning"}
               startContent={
-                order.status === "Đã giao" ? (
+                order.status === "completed" ? (
                   <CheckCircle size={16} />
                 ) : (
                   <Truck size={16} />
                 )
               }
             >
-              {order.status}
+              {order.status === "completed" ? "Đã giao" : "Đang xử lý"}
             </Chip>
           </CardHeader>
 
           <CardBody className="space-y-4">
-            {order.items.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-4">
+            {order.items.map((item) => (
+              <div key={item.id} className="flex items-start gap-4">
                 <Image
-                  alt={item.name}
+                  alt={item.product_name}
                   className="rounded"
-                  src={item.image}
-                  width={70}
+                  src={item.thumbnail}
+                  width={100}
                 />
                 <div className="flex-1 text-sm">
-                  <p className="font-medium">{item.name}</p>
-                  <p>
-                    Màu: {item.color} | Số lượng: x{item.quantity}
-                  </p>
+                  <p className="font-medium">{item.product_name}</p>
+                  <p>Số lượng: x{item.quantity}</p>
                 </div>
-                <p className="font-semibold">{formatVND(item.price)}</p>
+                <p className="font-semibold">
+                  {formatVND(parseInt(item.price))}
+                </p>
               </div>
             ))}
 
@@ -86,21 +86,13 @@ export default function OrderContainer() {
 
             <div className="flex justify-between items-center">
               <p className="font-semibold text-base">Tổng cộng</p>
-              <p className="font-bold text-lg">{formatVND(order.total)}</p>
+              <p className="font-bold text-lg">
+                {formatVND(parseInt(order.total_price))}
+              </p>
             </div>
           </CardBody>
         </Card>
       ))}
-
-      <div className="flex justify-center pt-4">
-        <Pagination
-          showControls
-          initialPage={1}
-          page={currentPage}
-          total={totalPages}
-          onChange={setCurrentPage}
-        />
-      </div>
     </div>
   );
 }
