@@ -41,7 +41,6 @@ export default function MyCartContainer() {
       });
       refetch();
     },
-
     onError: (err) => {
       addToast({
         title: "Lỗi khi đặt hàng",
@@ -56,16 +55,18 @@ export default function MyCartContainer() {
   const [discountCodes, setDiscountCodes] = useState<Record<number, string>>(
     {},
   );
-
   const [discountLoading, setDiscountLoading] = useState<
     Record<number, boolean>
   >({});
-
   const [discountErrors, setDiscountErrors] = useState<Record<number, string>>(
     {},
   );
 
   const debounceRefs = useRef<Record<number, NodeJS.Timeout>>({});
+
+  const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">(
+    "delivery",
+  );
 
   const handleDiscountCodeChange = (
     cartItemId: number,
@@ -74,16 +75,12 @@ export default function MyCartContainer() {
     code: string,
   ) => {
     setDiscountCodes((prev) => ({ ...prev, [cartItemId]: code }));
-
-    // clear lỗi trước đó
     setDiscountErrors((prev) => ({ ...prev, [cartItemId]: "" }));
 
-    // clear debounce trước đó nếu có
     if (debounceRefs.current[cartItemId]) {
       clearTimeout(debounceRefs.current[cartItemId]);
     }
 
-    // set loading true
     setDiscountLoading((prev) => ({ ...prev, [cartItemId]: true }));
 
     debounceRefs.current[cartItemId] = setTimeout(async () => {
@@ -109,6 +106,11 @@ export default function MyCartContainer() {
     0,
   );
 
+  // 2. Tính phí vận chuyển theo phương thức
+  const shippingFee = deliveryMethod === "delivery" ? 30000 : 0;
+  const tax = (totalPrice ?? 0) * 0.1;
+  const totalPayment = (totalPrice ?? 0) + tax + shippingFee;
+
   return (
     <div>
       <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -124,7 +126,14 @@ export default function MyCartContainer() {
               <h2 className="text-xl font-semibold">Phương thức giao hàng</h2>
             </CardHeader>
             <CardBody>
-              <Tabs aria-label="Phương thức giao hàng" variant="bordered">
+              <Tabs
+                aria-label="Phương thức giao hàng"
+                selectedKey={deliveryMethod}
+                variant="bordered"
+                onSelectionChange={(key) =>
+                  setDeliveryMethod(key as "delivery" | "pickup")
+                }
+              >
                 <Tab key="delivery" title="Giao hàng">
                   <Input
                     className="mb-4"
@@ -149,8 +158,8 @@ export default function MyCartContainer() {
                 </Tab>
                 <Tab key="pickup" title="Tự đến lấy">
                   <p className="text-base italic">
-                    Tự đến lấy hàng tại cửa hàng sẽ giúp bạn tiết kiệm phí vận
-                    chuyển.
+                    Tự đến lấy hàng tại cửa hàng sẽ giúp bạn{" "}
+                    <strong>không mất phí vận chuyển</strong>.
                   </p>
                 </Tab>
               </Tabs>
@@ -255,15 +264,15 @@ export default function MyCartContainer() {
                 </div>
                 <div className="flex justify-between">
                   <span>Thuế (10%)</span>
-                  <span>{formatVND((totalPrice ?? 0) * 0.1)}</span>
+                  <span>{formatVND(tax)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Phí vận chuyển</span>
-                  <span>{formatVND(30000)}</span>
+                  <span>{formatVND(shippingFee)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-xl pt-2">
                   <span>Tổng cộng</span>
-                  <span>{formatVND((totalPrice ?? 0) * 1.1 + 30000)}</span>
+                  <span>{formatVND(totalPayment)}</span>
                 </div>
               </div>
 
@@ -276,7 +285,7 @@ export default function MyCartContainer() {
                 startContent={<CreditCard />}
                 onPress={() => orderNow({ type: "from_cart" })}
               >
-                Thanh toán {formatVND((totalPrice ?? 0) * 1.1 + 30000)}
+                Thanh toán {formatVND(totalPayment)}
               </Button>
             </CardBody>
           </Card>
