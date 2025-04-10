@@ -35,14 +35,6 @@ export const getOrderHistory = async (): Promise<OrderHistoryResponse> => {
   return res.data;
 };
 
-export const orderFromCart = async (type: string) => {
-  const res = await axiosInstance.post("?request=post-checkout", {
-    type,
-  });
-
-  return res.data;
-};
-
 export const orderNow = async (
   type: string,
   product_id: number,
@@ -54,6 +46,14 @@ export const orderNow = async (
     product_id,
     quantity,
     discount_code,
+  });
+
+  return res.data;
+};
+
+export const orderFromCart = async (type: string) => {
+  const res = await axiosInstance.post("?request=post-checkout", {
+    type,
   });
 
   return res.data;

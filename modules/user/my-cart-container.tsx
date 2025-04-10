@@ -10,14 +10,17 @@ import {
   Tab,
   Tabs,
   Chip,
-  Divider,
+  addToast,
+  Spinner,
 } from "@heroui/react";
 import { CreditCard, TicketPercent } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import Forward from "@/components/forward";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/hooks/useCart";
+import { useOrderFromCart } from "@/hooks/useOrderFromCart";
+import { useUpdateCartDiscount } from "@/hooks/useUpdateCartDiscount";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -27,18 +30,78 @@ const formatVND = (value: number) =>
   }).format(value);
 
 export default function MyCartContainer() {
-  const { data, isLoading, error } = useCart();
+  const { data, isLoading, error, refetch } = useCart();
 
-  // local state lưu mã giảm giá cho từng cart item
+  const { mutate: orderNow, isPending: orderNowPending } = useOrderFromCart({
+    onSuccess: (res) => {
+      addToast({
+        title: "Đặt hàng thành công, vui lòng chờ admin xác nhận",
+        description: res.message,
+        color: "success",
+      });
+      refetch();
+    },
+
+    onError: (err) => {
+      addToast({
+        title: "Lỗi khi đặt hàng",
+        description: err.message,
+        color: "danger",
+      });
+    },
+  });
+
+  const { mutateAsync: updateDiscount } = useUpdateCartDiscount();
+
   const [discountCodes, setDiscountCodes] = useState<Record<number, string>>(
     {},
   );
 
-  const handleDiscountCodeChange = (cartItemId: number, code: string) => {
-    setDiscountCodes((prev) => ({
-      ...prev,
-      [cartItemId]: code,
-    }));
+  const [discountLoading, setDiscountLoading] = useState<
+    Record<number, boolean>
+  >({});
+
+  const [discountErrors, setDiscountErrors] = useState<Record<number, string>>(
+    {},
+  );
+
+  const debounceRefs = useRef<Record<number, NodeJS.Timeout>>({});
+
+  const handleDiscountCodeChange = (
+    cartItemId: number,
+    productId: number,
+    quantity: number,
+    code: string,
+  ) => {
+    setDiscountCodes((prev) => ({ ...prev, [cartItemId]: code }));
+
+    // clear lỗi trước đó
+    setDiscountErrors((prev) => ({ ...prev, [cartItemId]: "" }));
+
+    // clear debounce trước đó nếu có
+    if (debounceRefs.current[cartItemId]) {
+      clearTimeout(debounceRefs.current[cartItemId]);
+    }
+
+    // set loading true
+    setDiscountLoading((prev) => ({ ...prev, [cartItemId]: true }));
+
+    debounceRefs.current[cartItemId] = setTimeout(async () => {
+      try {
+        await updateDiscount({
+          product_id: productId,
+          quantity,
+          discount_code: code,
+        });
+      } catch (err: any) {
+        setDiscountErrors((prev) => ({
+          ...prev,
+          [cartItemId]: err?.message || "Mã giảm giá không hợp lệ",
+        }));
+      } finally {
+        setDiscountLoading((prev) => ({ ...prev, [cartItemId]: false }));
+      }
+    }, 600);
   };
 
   const totalPrice = data?.cart_items.reduce(
@@ -154,9 +217,14 @@ export default function MyCartContainer() {
                     </div>
                   </div>
 
-                  <div className="pt-2">
+                  <div className="pt-2 space-y-1">
                     <Input
                       className="w-full"
+                      endContent={
+                        discountLoading[item.cart_item_id] ? (
+                          <Spinner size="sm" />
+                        ) : null
+                      }
                       placeholder="Mã giảm giá cho sản phẩm này"
                       size="md"
                       startContent={<TicketPercent />}
@@ -165,15 +233,20 @@ export default function MyCartContainer() {
                       onChange={(e) =>
                         handleDiscountCodeChange(
                           item.cart_item_id,
+                          item.product_id,
+                          item.quantity,
                           e.target.value,
                         )
                       }
                     />
+                    {discountErrors[item.cart_item_id] && (
+                      <p className="text-sm text-red-500">
+                        {discountErrors[item.cart_item_id]}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
-
-              <Divider className="my-4" />
 
               <div className="border-t pt-4 space-y-2 text-base">
                 <div className="flex justify-between">
@@ -198,8 +271,10 @@ export default function MyCartContainer() {
                 fullWidth
                 className="mt-4 text-base"
                 color="primary"
+                isLoading={orderNowPending}
                 size="lg"
                 startContent={<CreditCard />}
+                onPress={() => orderNow({ type: "from_cart" })}
               >
                 Thanh toán {formatVND((totalPrice ?? 0) * 1.1 + 30000)}
               </Button>

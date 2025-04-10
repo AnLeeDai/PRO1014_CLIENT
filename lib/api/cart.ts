@@ -40,3 +40,17 @@ export const createCart = async (
 
   return res.data;
 };
+
+export const updateCartDiscount = async (
+  product_id: number,
+  quantity: number,
+  discount_code: string,
+) => {
+  const res = await axiosInstance.put("?request=put-cart", {
+    product_id,
+    quantity,
+    discount_code,
+  });
+
+  return res.data;
+};
