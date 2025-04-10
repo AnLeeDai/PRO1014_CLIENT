@@ -24,6 +24,7 @@ import { useState } from "react";
 import { useProductByID } from "@/hooks/useProductByID";
 import { useOrderNow } from "@/hooks/useBuyNow";
 import { useCreateCart } from "@/hooks/useCreateOrder";
+import { useCart } from "@/hooks/useCart";
 
 interface IModalDetailProductProps {
   isOpen: boolean;
@@ -40,6 +41,8 @@ export default function ModalDetailProduct({
 }: IModalDetailProductProps) {
   const { data: productData, isLoading: productLoading } =
     useProductByID(productId);
+
+  const { refetch: refetchCart } = useCart();
 
   const { mutate: orderNow, isPending: orderNowPending } = useOrderNow({
     onSuccess: (data) => {
@@ -66,6 +69,8 @@ export default function ModalDetailProduct({
         description: data.message,
         color: "success",
       });
+
+      refetchCart();
     },
 
     onError: (error) => {
