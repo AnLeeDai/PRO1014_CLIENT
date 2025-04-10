@@ -188,7 +188,7 @@ export default function ModalDetailProduct({
                           className="flex 1"
                           label="Số lượng"
                           min={1}
-                          placeholder="Nhập mã giảm giá"
+                          placeholder="Nhập số lượng"
                           size="md"
                           startContent={<ListOrdered />}
                           type="number"
