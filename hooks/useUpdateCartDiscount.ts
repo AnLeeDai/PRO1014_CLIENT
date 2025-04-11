@@ -1,5 +1,5 @@
-// hooks/useUpdateCartDiscount.ts
 import { useMutation } from "@tanstack/react-query";
+
 import axiosInstance from "@/lib/axiosInstance";
 
 interface UpdateCartDiscountParams {
@@ -25,6 +25,7 @@ export const useUpdateCartDiscount = () => {
         quantity,
         discount_code,
       });
+
       return res.data;
     },
   });

@@ -18,11 +18,11 @@ import ProductGrid from "@/components/product-grid";
 import { useProduct } from "@/hooks/useProduct";
 
 export default function HomeContainer() {
-  const { data: phoneData, isLoading: phoneLoading } = useProduct(7);
-  const { data: tabletData, isLoading: tabletLoading } = useProduct(8);
-  const { data: laptopData, isLoading: laptopLoading } = useProduct(9);
+  const { data: phoneData, isLoading: phoneLoading } = useProduct(1);
+  const { data: tabletData, isLoading: tabletLoading } = useProduct(2);
+  const { data: laptopData, isLoading: laptopLoading } = useProduct(3);
   const { data: accessoriesData, isLoading: accessoriesLoading } =
-    useProduct(10);
+    useProduct(4);
 
   return (
     <>

@@ -14,13 +14,14 @@ import {
   Spinner,
 } from "@heroui/react";
 import { CreditCard, TicketPercent } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Forward from "@/components/forward";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/hooks/useCart";
 import { useOrderFromCart } from "@/hooks/useOrderFromCart";
 import { useUpdateCartDiscount } from "@/hooks/useUpdateCartDiscount";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -31,6 +32,8 @@ const formatVND = (value: number) =>
 
 export default function MyCartContainer() {
   const { data, isLoading, error, refetch } = useCart();
+  const { data: userInfo } = useUserInfo();
+  const getUserInfo = userInfo?.user;
 
   const { mutate: orderNow, isPending: orderNowPending } = useOrderFromCart({
     onSuccess: (res) => {
@@ -61,12 +64,65 @@ export default function MyCartContainer() {
   const [discountErrors, setDiscountErrors] = useState<Record<number, string>>(
     {},
   );
-
   const debounceRefs = useRef<Record<number, NodeJS.Timeout>>({});
 
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">(
     "delivery",
   );
+
+  const [shippingAddress, setShippingAddress] = useState("");
+
+  useEffect(() => {
+    if (getUserInfo?.address) {
+      setShippingAddress(getUserInfo.address);
+    }
+  }, [getUserInfo]);
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      addToast({
+        title: "Trình duyệt không hỗ trợ",
+        description: "Không thể lấy vị trí hiện tại",
+        color: "danger",
+      });
+
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+          );
+          const data = await response.json();
+          const address = data?.display_name || "Không tìm thấy địa chỉ";
+
+          setShippingAddress(address);
+          addToast({
+            title: "Lấy vị trí thành công",
+            description: address,
+            color: "success",
+          });
+        } catch (error) {
+          addToast({
+            title: "Lỗi khi lấy địa chỉ",
+            description: "Vui lòng thử lại sau" + error,
+            color: "danger",
+          });
+        }
+      },
+      () => {
+        addToast({
+          title: "Không thể lấy vị trí",
+          description: "Vui lòng cho phép quyền truy cập vị trí",
+          color: "danger",
+        });
+      },
+    );
+  };
 
   const handleDiscountCodeChange = (
     cartItemId: number,
@@ -106,7 +162,6 @@ export default function MyCartContainer() {
     0,
   );
 
-  // 2. Tính phí vận chuyển theo phương thức
   const shippingFee = deliveryMethod === "delivery" ? 30000 : 0;
   const tax = (totalPrice ?? 0) * 0.1;
   const totalPayment = (totalPrice ?? 0) + tax + shippingFee;
@@ -119,7 +174,6 @@ export default function MyCartContainer() {
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
-        {/* Cột trái */}
         <div className="flex-[2_1_0%] space-y-6">
           <Card>
             <CardHeader>
@@ -139,21 +193,18 @@ export default function MyCartContainer() {
                     className="mb-4"
                     placeholder="Địa chỉ giao hàng của bạn"
                     size="lg"
+                    value={shippingAddress}
+                    onChange={(e) => setShippingAddress(e.target.value)}
                   />
                   <div className="space-y-4 text-base">
-                    <Chip color="success" variant="faded">
+                    <Chip
+                      className="cursor-pointer"
+                      color="success"
+                      variant="faded"
+                      onClick={handleUseCurrentLocation}
+                    >
                       📍 Dùng vị trí hiện tại của bạn
                     </Chip>
-                    {[
-                      "12 Nguyễn Trãi, Quận 1, TP. Hồ Chí Minh",
-                      "45 Lê Duẩn, Quận Hải Châu, Đà Nẵng",
-                      "89 Kim Mã, Quận Ba Đình, Hà Nội",
-                    ].map((address, idx) => (
-                      <div key={idx} className="flex items-start gap-2">
-                        <span>🔹</span>
-                        <p>{address}</p>
-                      </div>
-                    ))}
                   </div>
                 </Tab>
                 <Tab key="pickup" title="Tự đến lấy">
@@ -171,9 +222,9 @@ export default function MyCartContainer() {
               <h2 className="text-xl font-semibold">Thông tin cá nhân</h2>
             </CardHeader>
             <CardBody className="space-y-2 text-base">
-              <div>👤 Lê Đại An</div>
-              <div>📧 ledaian22@gmail.com</div>
-              <div>📞 +84 0334920373</div>
+              <div>👤 {getUserInfo?.full_name}</div>
+              <div>📧 {getUserInfo?.email}</div>
+              <div>📞 {getUserInfo?.phone_number}</div>
             </CardBody>
           </Card>
         </div>
