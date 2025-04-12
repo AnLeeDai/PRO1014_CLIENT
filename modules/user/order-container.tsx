@@ -8,7 +8,7 @@ import {
   Image,
   Divider,
 } from "@heroui/react";
-import { Truck, CheckCircle } from "lucide-react";
+import { Truck, CheckCircle, XCircle, Clock } from "lucide-react";
 
 import { siteConfig } from "@/config/site";
 import Forward from "@/components/forward";
@@ -23,6 +23,41 @@ export default function OrderContainer() {
       currency: "VND",
       minimumFractionDigits: 0,
     }).format(value);
+
+  const getStatusChip = (status: string) => {
+    switch (status) {
+      case "pending":
+        return (
+          <Chip color="warning" startContent={<Clock size={16} />}>
+            Đang chờ xử lý
+          </Chip>
+        );
+      case "delivered":
+        return (
+          <Chip color="primary" startContent={<Truck size={16} />}>
+            Đã giao hàng
+          </Chip>
+        );
+      case "completed":
+        return (
+          <Chip color="success" startContent={<CheckCircle size={16} />}>
+            Hoàn thành
+          </Chip>
+        );
+      case "cancelled":
+        return (
+          <Chip color="danger" startContent={<XCircle size={16} />}>
+            Đã hủy
+          </Chip>
+        );
+      default:
+        return (
+          <Chip color="default" startContent={<Clock size={16} />}>
+            Không xác định
+          </Chip>
+        );
+    }
+  };
 
   if (isLoading) return <p>Đang tải đơn hàng...</p>;
 
@@ -49,18 +84,7 @@ export default function OrderContainer() {
               <p className="text-sm">Ngày mua: {order.created_at}</p>
             </div>
 
-            <Chip
-              color={order.status === "completed" ? "success" : "warning"}
-              startContent={
-                order.status === "completed" ? (
-                  <CheckCircle size={16} />
-                ) : (
-                  <Truck size={16} />
-                )
-              }
-            >
-              {order.status === "completed" ? "Đã giao" : "Đang xử lý"}
-            </Chip>
+            {getStatusChip(order.status)}
           </CardHeader>
 
           <CardBody className="space-y-4">
