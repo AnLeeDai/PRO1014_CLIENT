@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import {
@@ -12,8 +13,11 @@ import {
   Chip,
   addToast,
   Spinner,
+  Autocomplete,
+  AutocompleteItem,
+  Tooltip,
 } from "@heroui/react";
-import { CreditCard, TicketPercent } from "lucide-react";
+import { CreditCard, TicketPercent, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import Forward from "@/components/forward";
@@ -23,6 +27,7 @@ import { useOrderFromCart } from "@/hooks/useOrderFromCart";
 import { useUpdateCartDiscount } from "@/hooks/useUpdateCartDiscount";
 import { useUserInfo } from "@/hooks/useUserInfo";
 
+// Hàm định dạng tiền tệ VNĐ
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -35,6 +40,7 @@ export default function MyCartContainer() {
   const { data: userInfo } = useUserInfo();
   const getUserInfo = userInfo?.user;
 
+  // Gọi API để đặt hàng
   const { mutate: orderNow, isPending: orderNowPending } = useOrderFromCart({
     onSuccess: (res) => {
       addToast({
@@ -53,8 +59,10 @@ export default function MyCartContainer() {
     },
   });
 
+  // Gọi API cập nhật mã giảm giá
   const { mutateAsync: updateDiscount } = useUpdateCartDiscount();
 
+  // State cho discount code
   const [discountCodes, setDiscountCodes] = useState<Record<number, string>>(
     {},
   );
@@ -66,18 +74,96 @@ export default function MyCartContainer() {
   );
   const debounceRefs = useRef<Record<number, NodeJS.Timeout>>({});
 
+  // Trạng thái: Giao hàng / Tự đến lấy
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">(
     "delivery",
   );
 
-  const [shippingAddress, setShippingAddress] = useState("");
+  // Địa chỉ chính thức để đặt hàng
+  const [_shippingAddress, setShippingAddress] = useState("");
 
+  // Trạng thái input khi người dùng gõ => Chỉ dùng để search gợi ý
+  const [addressQuery, setAddressQuery] = useState("");
+
+  // Danh sách gợi ý
+  const [addressSuggestions, setAddressSuggestions] = useState<
+    { label: string; key: string }[]
+  >([]);
+
+  // Loading khi fetch gợi ý
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+
+  // ------------------------------
+  // State loading khi lấy vị trí
+  // ------------------------------
+  const [isGettingCurrentLocation, setIsGettingCurrentLocation] =
+    useState(false);
+
+  // Khi có userInfo thì đồng bộ vào địa chỉ và ô input
   useEffect(() => {
     if (getUserInfo?.address) {
       setShippingAddress(getUserInfo.address);
+      setAddressQuery(getUserInfo.address);
     }
   }, [getUserInfo]);
 
+  // Debounce khi người dùng gõ địa chỉ
+  const queryTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Nếu dưới 3 ký tự => không fetch
+    if (!addressQuery || addressQuery.length < 3) {
+      setAddressSuggestions([]);
+
+      return;
+    }
+
+    if (queryTimeout.current) {
+      clearTimeout(queryTimeout.current);
+    }
+
+    queryTimeout.current = setTimeout(async () => {
+      setIsSearchingAddress(true);
+      try {
+        // countrycodes=vn để chỉ tìm kiếm tại Việt Nam
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+            addressQuery,
+          )}&format=json&addressdetails=1&limit=5&countrycodes=vn`,
+        );
+        const json = await res.json();
+        const suggestions = json.map((item: any, idx: number) => ({
+          label: item.display_name,
+          key: String(idx),
+        }));
+
+        setAddressSuggestions(suggestions);
+      } catch (err) {
+        setAddressSuggestions([]);
+      } finally {
+        setIsSearchingAddress(false);
+      }
+    }, 300);
+
+    return () => {
+      if (queryTimeout.current) {
+        clearTimeout(queryTimeout.current);
+      }
+    };
+  }, [addressQuery]);
+
+  // Khi người dùng chọn 1 gợi ý từ Autocomplete
+  const handleSelectAddress = (key: string | number | null) => {
+    if (key === null) return; // đề phòng trường hợp null
+    const selected = addressSuggestions.find((item) => item.key === key);
+
+    if (selected) {
+      setShippingAddress(selected.label);
+      setAddressQuery(selected.label);
+    }
+  };
+
+  // Hàm xử lý lấy vị trí hiện tại bằng geolocation
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
       addToast({
@@ -89,11 +175,13 @@ export default function MyCartContainer() {
       return;
     }
 
+    // Bắt đầu quá trình => hiển thị loading
+    setIsGettingCurrentLocation(true);
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const { latitude, longitude } = position.coords;
-
         try {
+          const { latitude, longitude } = position.coords;
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
           );
@@ -101,6 +189,8 @@ export default function MyCartContainer() {
           const address = data?.display_name || "Không tìm thấy địa chỉ";
 
           setShippingAddress(address);
+          setAddressQuery(address);
+
           addToast({
             title: "Lấy vị trí thành công",
             description: address,
@@ -109,9 +199,11 @@ export default function MyCartContainer() {
         } catch (error) {
           addToast({
             title: "Lỗi khi lấy địa chỉ",
-            description: "Vui lòng thử lại sau" + error,
+            description: "Vui lòng thử lại sau",
             color: "danger",
           });
+        } finally {
+          setIsGettingCurrentLocation(false);
         }
       },
       () => {
@@ -120,10 +212,12 @@ export default function MyCartContainer() {
           description: "Vui lòng cho phép quyền truy cập vị trí",
           color: "danger",
         });
+        setIsGettingCurrentLocation(false);
       },
     );
   };
 
+  // Xử lý nhập mã giảm giá cho mỗi cart item
   const handleDiscountCodeChange = (
     cartItemId: number,
     productId: number,
@@ -157,12 +251,13 @@ export default function MyCartContainer() {
     }, 600);
   };
 
+  // Tính toán số tiền
   const totalPrice = data?.cart_items.reduce(
     (sum, item) => sum + parseFloat(item.final_price) * item.quantity,
     0,
   );
 
-  const shippingFee = deliveryMethod === "delivery" ? 30000 : 0;
+  const shippingFee = deliveryMethod === "delivery" ? 50000 : 0;
   const tax = (totalPrice ?? 0) * 0.1;
   const totalPayment = (totalPrice ?? 0) + tax + shippingFee;
 
@@ -174,6 +269,7 @@ export default function MyCartContainer() {
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
+        {/* Bên trái */}
         <div className="flex-[2_1_0%] space-y-6">
           <Card>
             <CardHeader>
@@ -189,24 +285,39 @@ export default function MyCartContainer() {
                 }
               >
                 <Tab key="delivery" title="Giao hàng">
-                  <Input
+                  <Autocomplete
                     className="mb-4"
-                    placeholder="Địa chỉ giao hàng của bạn"
-                    size="lg"
-                    value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
-                  />
+                    inputValue={addressQuery}
+                    isLoading={isSearchingAddress}
+                    label="Địa chỉ giao hàng của bạn"
+                    startContent={<MapPin className="text-muted-foreground" />}
+                    onInputChange={(value) => setAddressQuery(value)}
+                    onSelectionChange={handleSelectAddress}
+                  >
+                    {addressSuggestions.map((item) => (
+                      <AutocompleteItem key={item.key}>
+                        {item.label}
+                      </AutocompleteItem>
+                    ))}
+                  </Autocomplete>
+
                   <div className="space-y-4 text-base">
-                    <Chip
-                      className="cursor-pointer"
-                      color="success"
-                      variant="faded"
-                      onClick={handleUseCurrentLocation}
-                    >
-                      📍 Dùng vị trí hiện tại của bạn
-                    </Chip>
+                    <Tooltip content="Vị trí chỉ mang tính chất tương đối, có thể không chính xác">
+                      <Chip
+                        className="cursor-pointer"
+                        color="success"
+                        isDisabled={isGettingCurrentLocation}
+                        variant="faded"
+                        onClick={handleUseCurrentLocation}
+                      >
+                        {isGettingCurrentLocation
+                          ? "Đang lấy vị trí..."
+                          : "📍 Dùng vị trí hiện tại của bạn"}
+                      </Chip>
+                    </Tooltip>
                   </div>
                 </Tab>
+
                 <Tab key="pickup" title="Tự đến lấy">
                   <p className="text-base italic">
                     Tự đến lấy hàng tại cửa hàng sẽ giúp bạn{" "}
@@ -229,7 +340,7 @@ export default function MyCartContainer() {
           </Card>
         </div>
 
-        {/* Cột phải */}
+        {/* Bên phải */}
         <div className="flex-[1_1_0%] space-y-6">
           <Card>
             <CardHeader>
@@ -248,7 +359,7 @@ export default function MyCartContainer() {
               {data?.cart_items.map((item) => (
                 <div
                   key={item.cart_item_id}
-                  className="rounded-lg border border-zinc-700 p-4 space-y-3 bg-zinc-900"
+                  className="rounded-lg border p-4 space-y-3"
                 >
                   <div className="flex items-start gap-4">
                     <Image
