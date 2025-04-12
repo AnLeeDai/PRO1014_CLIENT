@@ -32,6 +32,7 @@ import { useProductByID } from "@/hooks/useProductByID";
 import { useOrderNow } from "@/hooks/useBuyNow";
 import { useCreateCart } from "@/hooks/useCreateOrder";
 import { useCart } from "@/hooks/useCart";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 interface IModalDetailProductProps {
   isOpen: boolean;
@@ -72,7 +73,6 @@ export default function ModalDetailProduct({
   });
 
   const addressValue = watch("address");
-
   const [addressSuggestions, setAddressSuggestions] = useState<
     { label: string; key: string }[]
   >([]);
@@ -80,12 +80,13 @@ export default function ModalDetailProduct({
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [isQRModalOpen, setQRModalOpen] = useState(false);
 
-  // State này dùng để hiển thị loading khi bấm “Dùng vị trí hiện tại”
   const [isGettingCurrentLocation, setIsGettingCurrentLocation] =
     useState(false);
-
   const queryTimeout = useRef<NodeJS.Timeout | null>(null);
 
+  const { data: userInfo } = useUserInfo();
+
+  // Gọi API orderNow => "buy_now"
   const { mutate: orderNow, isPending: orderNowPending } = useOrderNow({
     onSuccess: (data) => {
       addToast({
@@ -93,7 +94,6 @@ export default function ModalDetailProduct({
         description: data.message,
         color: "success",
       });
-
       setQRModalOpen(false);
     },
 
@@ -106,6 +106,7 @@ export default function ModalDetailProduct({
     },
   });
 
+  // Gọi API thêm vào giỏ hàng
   const { mutate: createCart, isPending: createCartPending } = useCreateCart({
     onSuccess: (data) => {
       addToast({
@@ -113,6 +114,7 @@ export default function ModalDetailProduct({
         description: data.message,
         color: "success",
       });
+
       refetchCart();
     },
 
@@ -127,17 +129,16 @@ export default function ModalDetailProduct({
 
   const data = productData?.product;
 
+  // Fetch gợi ý địa chỉ
   useEffect(() => {
     if (!addressValue || addressValue.length < 3) {
       setAddressSuggestions([]);
 
       return;
     }
-
     if (queryTimeout.current) {
       clearTimeout(queryTimeout.current);
     }
-
     queryTimeout.current = setTimeout(async () => {
       setIsSearchingAddress(true);
       try {
@@ -167,6 +168,7 @@ export default function ModalDetailProduct({
     };
   }, [addressValue]);
 
+  // Người dùng chọn 1 địa chỉ từ Autocomplete
   const handleSelectAddress = (key: string | number | null) => {
     if (key === null) return;
     const selected = addressSuggestions.find((item) => item.key === key);
@@ -176,6 +178,7 @@ export default function ModalDetailProduct({
     }
   };
 
+  // Lấy địa chỉ hiện tại (geolocation)
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
       addToast({
@@ -186,10 +189,7 @@ export default function ModalDetailProduct({
 
       return;
     }
-
-    // Bắt đầu quá trình lấy vị trí => hiển thị loading
     setIsGettingCurrentLocation(true);
-
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
@@ -213,10 +213,10 @@ export default function ModalDetailProduct({
             color: "danger",
           });
         } finally {
-          // Kết thúc quá trình lấy vị trí => tắt loading
           setIsGettingCurrentLocation(false);
         }
       },
+
       () => {
         addToast({
           title: "Không thể lấy vị trí",
@@ -230,23 +230,25 @@ export default function ModalDetailProduct({
 
   if (!isOpen) return null;
 
+  // Zoom ảnh
   const handleImageClick = (img_url: string) => {
     setZoomedImage(img_url);
   };
-
   const closeZoom = () => {
     setZoomedImage(null);
   };
 
+  // Thêm sản phẩm vào giỏ
   const onAddToCart = (values: IFormInputs) => {
     if (!data?.id) return;
+
     createCart({
       product_id: data.id,
       quantity: values.quantity,
-      discount_code: values.discountCode,
     });
   };
 
+  // Mở modal QR
   const onShowQRModal = () => {
     if (!getValues("address").trim()) {
       addToast({
@@ -260,6 +262,7 @@ export default function ModalDetailProduct({
     setQRModalOpen(true);
   };
 
+  // Mua ngay => Gửi lên server
   const onBuyNow = (values: IFormInputs) => {
     if (!data?.id) return;
     if (!values.address.trim()) {
@@ -275,8 +278,10 @@ export default function ModalDetailProduct({
     orderNow({
       type: "buy_now",
       product_id: data?.id,
-      quantity: getValues("quantity"),
-      discount_code: getValues("discountCode"),
+      quantity: values.quantity,
+      discount_code: values.discountCode,
+      shipping_address: values.address,
+      payment_method: "bank_transfer",
     });
   };
 
@@ -355,7 +360,6 @@ export default function ModalDetailProduct({
                             type="number"
                             {...register("quantity", { valueAsNumber: true })}
                           />
-
                           <Input
                             label="Mã giảm giá (voucher)"
                             placeholder="Nhập mã giảm giá"
@@ -365,42 +369,39 @@ export default function ModalDetailProduct({
                           />
                         </div>
 
-                        <div className="grid grid-cols-1">
-                          <Autocomplete
-                            className="w-full"
-                            inputValue={addressValue}
-                            isLoading={isSearchingAddress}
-                            label="Địa chỉ giao hàng"
-                            startContent={
-                              <MapPin className="text-muted-foreground" />
-                            }
-                            onInputChange={(value) =>
-                              setValue("address", value)
-                            }
-                            onSelectionChange={handleSelectAddress}
-                          >
-                            {addressSuggestions.map((item) => (
-                              <AutocompleteItem key={item.key}>
-                                {item.label}
-                              </AutocompleteItem>
-                            ))}
-                          </Autocomplete>
+                        {/* Địa chỉ giao hàng */}
+                        <Autocomplete
+                          className="w-full"
+                          inputValue={addressValue}
+                          isLoading={isSearchingAddress}
+                          label="Địa chỉ giao hàng"
+                          startContent={
+                            <MapPin className="text-muted-foreground" />
+                          }
+                          onInputChange={(value) => setValue("address", value)}
+                          onSelectionChange={handleSelectAddress}
+                        >
+                          {addressSuggestions.map((item) => (
+                            <AutocompleteItem key={item.key}>
+                              {item.label}
+                            </AutocompleteItem>
+                          ))}
+                        </Autocomplete>
 
-                          <div className="mt-2">
-                            <Tooltip content="Vị trí chỉ mang tính chất tương đối">
-                              <Chip
-                                className="cursor-pointer"
-                                color="success"
-                                isDisabled={isGettingCurrentLocation}
-                                variant="faded"
-                                onClick={handleUseCurrentLocation}
-                              >
-                                {isGettingCurrentLocation
-                                  ? "Đang lấy vị trí..."
-                                  : "📍 Dùng vị trí hiện tại"}
-                              </Chip>
-                            </Tooltip>
-                          </div>
+                        <div>
+                          <Tooltip content="Vị trí chỉ mang tính chất tương đối">
+                            <Chip
+                              className="cursor-pointer"
+                              color="success"
+                              isDisabled={isGettingCurrentLocation}
+                              variant="faded"
+                              onClick={handleUseCurrentLocation}
+                            >
+                              {isGettingCurrentLocation
+                                ? "Đang lấy vị trí..."
+                                : "📍 Dùng vị trí hiện tại"}
+                            </Chip>
+                          </Tooltip>
                         </div>
                       </div>
 
@@ -466,6 +467,7 @@ export default function ModalDetailProduct({
         </ModalContent>
       </Modal>
 
+      {/* Zoom ảnh */}
       {zoomedImage && (
         <Modal backdrop="blur" isOpen={true} size="4xl" onClose={closeZoom}>
           <ModalContent>
@@ -485,6 +487,7 @@ export default function ModalDetailProduct({
         </Modal>
       )}
 
+      {/* Modal thanh toán QR */}
       {isQRModalOpen && (
         <Modal
           backdrop="blur"
@@ -501,10 +504,13 @@ export default function ModalDetailProduct({
                 src="/my_qr_code.png"
                 width={1280}
               />
-
-              <p className="text-center mt-4">Quét mã để hoàn tất thanh toán</p>
+              <p className="text-center mt-4">
+                Quét mã để hoàn tất thanh toán nội dung chuyển khoản là:&nbsp;
+                <strong>
+                  {userInfo?.user.user_id} - {userInfo?.user.full_name} -{" "}
+                </strong>
+              </p>
             </ModalBody>
-
             <ModalFooter>
               <Button
                 fullWidth

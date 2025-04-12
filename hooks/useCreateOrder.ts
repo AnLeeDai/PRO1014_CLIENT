@@ -6,7 +6,6 @@ import { ResponseErr, ResponseSuccess } from "@/types/api";
 interface CreateCartParams {
   product_id: number;
   quantity: number;
-  discount_code: string;
 }
 
 interface CreateCartResponse {
@@ -24,7 +23,7 @@ export const useCreateCart = (
   return useMutation({
     mutationKey: ["create-cart"],
     mutationFn: (data: CreateCartParams) =>
-      createCart(data.product_id, data.quantity, data.discount_code),
+      createCart(data.product_id, data.quantity),
     ...options,
   });
 };
