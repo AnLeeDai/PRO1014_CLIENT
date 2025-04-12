@@ -7,6 +7,7 @@ import {
   Chip,
   Image,
   Divider,
+  Skeleton,
 } from "@heroui/react";
 import { Truck, CheckCircle, XCircle, Clock } from "lucide-react";
 
@@ -59,7 +60,42 @@ export default function OrderContainer() {
     }
   };
 
-  if (isLoading) return <p>Đang tải đơn hàng...</p>;
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        {[...Array(3)].map((_, index) => (
+          <Card key={index}>
+            <CardHeader className="flex justify-between items-center">
+              <div>
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-32 mt-2" />
+              </div>
+              <Skeleton className="h-6 w-20" />
+            </CardHeader>
+            <CardBody className="space-y-4">
+              {[...Array(2)].map((_, itemIndex) => (
+                <div key={itemIndex} className="flex items-start gap-4">
+                  <Skeleton className="h-20 w-20 rounded" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                  <Skeleton className="h-5 w-20" />
+                </div>
+              ))}
+
+              <Divider className="my-2" />
+
+              <div className="flex justify-between items-center">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            </CardBody>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   if (data?.orders.length === 0) {
     return (
