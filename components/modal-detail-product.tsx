@@ -507,7 +507,7 @@ export default function ModalDetailProduct({
               <p className="text-center mt-4">
                 Quét mã để hoàn tất thanh toán nội dung chuyển khoản là:&nbsp;
                 <strong>
-                  {userInfo?.user.user_id} - {userInfo?.user.full_name} -{" "}
+                  {userInfo?.user.user_id} - {userInfo?.user.full_name}
                 </strong>
               </p>
             </ModalBody>

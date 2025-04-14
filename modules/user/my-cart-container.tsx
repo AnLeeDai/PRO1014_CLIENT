@@ -45,16 +45,16 @@ export default function MyCartContainer() {
   const { data: userInfo } = useUserInfo();
   const getUserInfo = userInfo?.user;
 
-  // Gọi API để đặt hàng (from_cart)
+  // Gọi API đặt hàng (from_cart)
   const { mutate: orderNow, isPending: orderNowPending } = useOrderFromCart({
     onSuccess: (res) => {
       addToast({
-        title: "Đặt hàng thành công, vui lòng chờ admin xác nhận",
+        title: "Đặt hàng thành công",
         description: res.message,
         color: "success",
       });
-      // Đóng modal & refetch
       setConfirmModalOpen(false);
+      // Giỏ hàng đã chuyển thành đơn, nên refetch để làm mới
       refetch();
     },
     onError: (err) => {
@@ -67,6 +67,7 @@ export default function MyCartContainer() {
   });
 
   // Gọi API cập nhật mã giảm giá
+  // Mỗi lần gọi mutateAsync => backend xử lý => ta refetch() để cập nhật giá
   const { mutateAsync: updateDiscount } = useUpdateCartDiscount();
 
   // State cho discount code
@@ -87,7 +88,7 @@ export default function MyCartContainer() {
   );
 
   // ------------------------------
-  // Modal xác nhận thanh toán (MỚI)
+  // Modal xác nhận thanh toán
   // ------------------------------
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
@@ -216,7 +217,7 @@ export default function MyCartContainer() {
     );
   };
 
-  // Xử lý discount
+  // Khi nhập mã giảm giá
   const handleDiscountCodeChange = (
     cartItemId: number,
     productId: number,
@@ -231,6 +232,7 @@ export default function MyCartContainer() {
     }
     setDiscountLoading((prev) => ({ ...prev, [cartItemId]: true }));
 
+    // Gọi API sau 600ms
     debounceRefs.current[cartItemId] = setTimeout(async () => {
       try {
         await updateDiscount({
@@ -238,6 +240,8 @@ export default function MyCartContainer() {
           quantity,
           discount_code: code,
         });
+        // Cập nhật lại giỏ hàng => hiển thị final_price mới
+        refetch();
       } catch (err: any) {
         setDiscountErrors((prev) => ({
           ...prev,
@@ -258,13 +262,13 @@ export default function MyCartContainer() {
   const tax = (totalPrice ?? 0) * 0.1;
   const totalPayment = (totalPrice ?? 0) + tax + shippingFee;
 
-  // Bấm nút "Thanh toán" -> Mở modal xác nhận (MỚI)
+  // Bấm nút "Thanh toán" => Mở modal xác nhận
   const handleShowConfirmModal = () => {
     // Nếu người dùng chọn giao hàng, kiểm tra địa chỉ
     if (deliveryMethod === "delivery" && !_shippingAddress.trim()) {
       addToast({
         title: "Bạn chưa nhập địa chỉ",
-        description: "Vui lòng nhập địa chỉ trước khi đặt hàng.",
+        description: "Vui lòng nhập địa chỉ trước khi đặt hàng",
         color: "warning",
       });
 
@@ -273,7 +277,7 @@ export default function MyCartContainer() {
     setConfirmModalOpen(true);
   };
 
-  // Gọi API khi bấm xác nhận trong modal (MỚI)
+  // Gọi API khi bấm xác nhận trong modal
   const handleConfirmCheckout = () => {
     orderNow({
       type: "from_cart",
@@ -377,11 +381,11 @@ export default function MyCartContainer() {
                   </Chip>
                 </div>
               </CardHeader>
-
               <CardBody className="space-y-5 text-base">
                 {isLoading && <p>Đang tải giỏ hàng...</p>}
                 {error && <p className="text-red-500">{error.message}</p>}
 
+                {/* Danh sách sản phẩm trong giỏ */}
                 {data?.cart_items.map((item) => (
                   <div
                     key={item.cart_item_id}
@@ -445,6 +449,7 @@ export default function MyCartContainer() {
                   </div>
                 ))}
 
+                {/* Tính toán đơn hàng */}
                 <div className="border-t pt-4 space-y-2 text-base">
                   <div className="flex justify-between">
                     <span>Tạm tính</span>
@@ -464,7 +469,7 @@ export default function MyCartContainer() {
                   </div>
                 </div>
 
-                {/* Bấm nút => mở modal xác nhận */}
+                {/* Nút Thanh Toán */}
                 <Button
                   fullWidth
                   className="mt-4 text-base"
@@ -497,9 +502,8 @@ export default function MyCartContainer() {
               src="/my_qr_code.png"
               width={1280}
             />
-
             <p className="text-center mt-4">
-              Quét mã để hoàn tất thanh toán nội dung chuyển khoản là:&nbsp;
+              Quét mã để hoàn tất thanh toán, nội dung chuyển khoản là:&nbsp;
               <strong>
                 {userInfo?.user.user_id} - {userInfo?.user.full_name}
               </strong>
