@@ -5,7 +5,6 @@ export interface CartItem {
   product_id: number;
   quantity: number;
   original_price: string;
-  discount_code: string;
   product_name: string;
   thumbnail: string;
   in_stock: number;

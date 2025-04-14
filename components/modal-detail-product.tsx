@@ -18,13 +18,7 @@ import {
   AutocompleteItem,
   ModalFooter,
 } from "@heroui/react";
-import {
-  BaggageClaim,
-  ListOrdered,
-  MapPin,
-  ShoppingCart,
-  TicketPercent,
-} from "lucide-react";
+import { BaggageClaim, ListOrdered, MapPin, ShoppingCart } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 
@@ -279,7 +273,6 @@ export default function ModalDetailProduct({
       type: "buy_now",
       product_id: data?.id,
       quantity: values.quantity,
-      discount_code: values.discountCode,
       shipping_address: values.address,
       payment_method: "bank_transfer",
     });
@@ -360,48 +353,41 @@ export default function ModalDetailProduct({
                             type="number"
                             {...register("quantity", { valueAsNumber: true })}
                           />
-                          <Input
-                            label="Mã giảm giá (voucher)"
-                            placeholder="Nhập mã giảm giá"
-                            size="md"
-                            startContent={<TicketPercent />}
-                            {...register("discountCode")}
-                          />
-                        </div>
-
-                        {/* Địa chỉ giao hàng */}
-                        <Autocomplete
-                          className="w-full"
-                          inputValue={addressValue}
-                          isLoading={isSearchingAddress}
-                          label="Địa chỉ giao hàng"
-                          startContent={
-                            <MapPin className="text-muted-foreground" />
-                          }
-                          onInputChange={(value) => setValue("address", value)}
-                          onSelectionChange={handleSelectAddress}
-                        >
-                          {addressSuggestions.map((item) => (
-                            <AutocompleteItem key={item.key}>
-                              {item.label}
-                            </AutocompleteItem>
-                          ))}
-                        </Autocomplete>
-
-                        <div>
-                          <Tooltip content="Vị trí chỉ mang tính chất tương đối">
-                            <Chip
-                              className="cursor-pointer"
-                              color="success"
-                              isDisabled={isGettingCurrentLocation}
-                              variant="faded"
-                              onClick={handleUseCurrentLocation}
+                          <div className="flex flex-col gap-3">
+                            <Autocomplete
+                              className="w-full"
+                              inputValue={addressValue}
+                              isLoading={isSearchingAddress}
+                              label="Địa chỉ giao hàng"
+                              startContent={
+                                <MapPin className="text-muted-foreground" />
+                              }
+                              onInputChange={(value) =>
+                                setValue("address", value)
+                              }
+                              onSelectionChange={handleSelectAddress}
                             >
-                              {isGettingCurrentLocation
-                                ? "Đang lấy vị trí..."
-                                : "📍 Dùng vị trí hiện tại"}
-                            </Chip>
-                          </Tooltip>
+                              {addressSuggestions.map((item) => (
+                                <AutocompleteItem key={item.key}>
+                                  {item.label}
+                                </AutocompleteItem>
+                              ))}
+                            </Autocomplete>
+
+                            <Tooltip content="Vị trí chỉ mang tính chất tương đối">
+                              <Chip
+                                className="cursor-pointer"
+                                color="success"
+                                isDisabled={isGettingCurrentLocation}
+                                variant="faded"
+                                onClick={handleUseCurrentLocation}
+                              >
+                                {isGettingCurrentLocation
+                                  ? "Đang lấy vị trí..."
+                                  : "📍 Dùng vị trí hiện tại"}
+                              </Chip>
+                            </Tooltip>
+                          </div>
                         </div>
                       </div>
 

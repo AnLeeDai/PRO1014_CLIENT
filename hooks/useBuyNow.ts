@@ -7,7 +7,6 @@ interface OrderNowParams {
   type: string;
   product_id: number;
   quantity: number;
-  discount_code: string;
   shipping_address: string;
   payment_method: string;
 }
@@ -29,18 +28,10 @@ export const useOrderNow = (
       type,
       product_id,
       quantity,
-      discount_code,
       shipping_address,
       payment_method,
     }: OrderNowParams) =>
-      orderNow(
-        type,
-        product_id,
-        quantity,
-        discount_code,
-        shipping_address,
-        payment_method,
-      ),
+      orderNow(type, product_id, quantity, shipping_address, payment_method),
     ...options,
   });
 };

@@ -6,13 +6,11 @@ import {
   CardHeader,
   CardBody,
   Button,
-  Input,
   Image,
   Tab,
   Tabs,
   Chip,
   addToast,
-  Spinner,
   Autocomplete,
   AutocompleteItem,
   Tooltip,
@@ -22,17 +20,15 @@ import {
   ModalBody,
   ModalFooter,
 } from "@heroui/react";
-import { CreditCard, TicketPercent, MapPin } from "lucide-react";
+import { CreditCard, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import Forward from "@/components/forward";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/hooks/useCart";
 import { useOrderFromCart } from "@/hooks/useOrderFromCart";
-import { useUpdateCartDiscount } from "@/hooks/useUpdateCartDiscount";
 import { useUserInfo } from "@/hooks/useUserInfo";
 
-// Hàm định dạng tiền tệ VNĐ
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -44,17 +40,14 @@ export default function MyCartContainer() {
   const { data, isLoading, error, refetch } = useCart();
   const { data: userInfo } = useUserInfo();
   const getUserInfo = userInfo?.user;
-
-  // Gọi API đặt hàng (from_cart)
   const { mutate: orderNow, isPending: orderNowPending } = useOrderFromCart({
     onSuccess: (res) => {
       addToast({
-        title: "Đặt hàng thành công",
+        title: "Đặt hàng thành công, vui lòng chờ admin xác nhận",
         description: res.message,
         color: "success",
       });
       setConfirmModalOpen(false);
-      // Giỏ hàng đã chuyển thành đơn, nên refetch để làm mới
       refetch();
     },
     onError: (err) => {
@@ -66,47 +59,19 @@ export default function MyCartContainer() {
     },
   });
 
-  // Gọi API cập nhật mã giảm giá
-  // Mỗi lần gọi mutateAsync => backend xử lý => ta refetch() để cập nhật giá
-  const { mutateAsync: updateDiscount } = useUpdateCartDiscount();
-
-  // State cho discount code
-  const [discountCodes, setDiscountCodes] = useState<Record<number, string>>(
-    {},
-  );
-  const [discountLoading, setDiscountLoading] = useState<
-    Record<number, boolean>
-  >({});
-  const [discountErrors, setDiscountErrors] = useState<Record<number, string>>(
-    {},
-  );
-  const debounceRefs = useRef<Record<number, NodeJS.Timeout>>({});
-
-  // Giao hàng / Tự đến lấy
   const [deliveryMethod, setDeliveryMethod] = useState<"delivery" | "pickup">(
     "delivery",
   );
-
-  // ------------------------------
-  // Modal xác nhận thanh toán
-  // ------------------------------
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
-
-  // Địa chỉ để gửi lên server
   const [_shippingAddress, setShippingAddress] = useState("");
-
-  // addressQuery để hiển thị gợi ý
   const [addressQuery, setAddressQuery] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<
     { label: string; key: string }[]
   >([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
-
-  // Loading khi lấy vị trí
   const [isGettingCurrentLocation, setIsGettingCurrentLocation] =
     useState(false);
 
-  // Đồng bộ địa chỉ từ user info
   useEffect(() => {
     if (getUserInfo?.address) {
       setShippingAddress(getUserInfo.address);
@@ -114,7 +79,6 @@ export default function MyCartContainer() {
     }
   }, [getUserInfo]);
 
-  // Tìm gợi ý địa chỉ (debounce)
   const queryTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -141,7 +105,7 @@ export default function MyCartContainer() {
         }));
 
         setAddressSuggestions(suggestions);
-      } catch (err) {
+      } catch {
         setAddressSuggestions([]);
       } finally {
         setIsSearchingAddress(false);
@@ -155,7 +119,6 @@ export default function MyCartContainer() {
     };
   }, [addressQuery]);
 
-  // Người dùng chọn 1 gợi ý
   const handleSelectAddress = (key: string | number | null) => {
     if (key === null) return;
     const selected = addressSuggestions.find((item) => item.key === key);
@@ -166,7 +129,6 @@ export default function MyCartContainer() {
     }
   };
 
-  // Lấy vị trí hiện tại
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
       addToast({
@@ -190,13 +152,12 @@ export default function MyCartContainer() {
 
           setShippingAddress(address);
           setAddressQuery(address);
-
           addToast({
             title: "Lấy vị trí thành công",
             description: address,
             color: "success",
           });
-        } catch (error) {
+        } catch {
           addToast({
             title: "Lỗi khi lấy địa chỉ",
             description: "Vui lòng thử lại sau",
@@ -217,43 +178,6 @@ export default function MyCartContainer() {
     );
   };
 
-  // Khi nhập mã giảm giá
-  const handleDiscountCodeChange = (
-    cartItemId: number,
-    productId: number,
-    quantity: number,
-    code: string,
-  ) => {
-    setDiscountCodes((prev) => ({ ...prev, [cartItemId]: code }));
-    setDiscountErrors((prev) => ({ ...prev, [cartItemId]: "" }));
-
-    if (debounceRefs.current[cartItemId]) {
-      clearTimeout(debounceRefs.current[cartItemId]);
-    }
-    setDiscountLoading((prev) => ({ ...prev, [cartItemId]: true }));
-
-    // Gọi API sau 600ms
-    debounceRefs.current[cartItemId] = setTimeout(async () => {
-      try {
-        await updateDiscount({
-          product_id: productId,
-          quantity,
-          discount_code: code,
-        });
-        // Cập nhật lại giỏ hàng => hiển thị final_price mới
-        refetch();
-      } catch (err: any) {
-        setDiscountErrors((prev) => ({
-          ...prev,
-          [cartItemId]: err?.message || "Mã giảm giá không hợp lệ",
-        }));
-      } finally {
-        setDiscountLoading((prev) => ({ ...prev, [cartItemId]: false }));
-      }
-    }, 600);
-  };
-
-  // Tính toán tiền
   const totalPrice = data?.cart_items.reduce(
     (sum, item) => sum + parseFloat(item.final_price) * item.quantity,
     0,
@@ -262,13 +186,11 @@ export default function MyCartContainer() {
   const tax = (totalPrice ?? 0) * 0.1;
   const totalPayment = (totalPrice ?? 0) + tax + shippingFee;
 
-  // Bấm nút "Thanh toán" => Mở modal xác nhận
   const handleShowConfirmModal = () => {
-    // Nếu người dùng chọn giao hàng, kiểm tra địa chỉ
     if (deliveryMethod === "delivery" && !_shippingAddress.trim()) {
       addToast({
         title: "Bạn chưa nhập địa chỉ",
-        description: "Vui lòng nhập địa chỉ trước khi đặt hàng",
+        description: "Vui lòng nhập địa chỉ trước khi đặt hàng.",
         color: "warning",
       });
 
@@ -277,7 +199,6 @@ export default function MyCartContainer() {
     setConfirmModalOpen(true);
   };
 
-  // Gọi API khi bấm xác nhận trong modal
   const handleConfirmCheckout = () => {
     orderNow({
       type: "from_cart",
@@ -293,9 +214,7 @@ export default function MyCartContainer() {
           <Forward href={siteConfig.routes.home} label="Quay lại trang chủ" />
           <h1 className="text-3xl font-bold">Giỏ hàng của tôi</h1>
         </div>
-
         <div className="flex flex-col gap-6 lg:flex-row">
-          {/* Bên trái */}
           <div className="flex-[2_1_0%] space-y-6">
             <Card>
               <CardHeader>
@@ -328,7 +247,6 @@ export default function MyCartContainer() {
                         </AutocompleteItem>
                       ))}
                     </Autocomplete>
-
                     <div className="space-y-4 text-base">
                       <Tooltip content="Vị trí chỉ mang tính chất tương đối, có thể không chính xác">
                         <Chip
@@ -345,7 +263,6 @@ export default function MyCartContainer() {
                       </Tooltip>
                     </div>
                   </Tab>
-
                   <Tab key="pickup" title="Tự đến lấy">
                     <p className="text-base italic">
                       Tự đến lấy hàng tại cửa hàng sẽ giúp bạn{" "}
@@ -355,7 +272,6 @@ export default function MyCartContainer() {
                 </Tabs>
               </CardBody>
             </Card>
-
             <Card>
               <CardHeader>
                 <h2 className="text-xl font-semibold">Thông tin cá nhân</h2>
@@ -367,8 +283,6 @@ export default function MyCartContainer() {
               </CardBody>
             </Card>
           </div>
-
-          {/* Bên phải */}
           <div className="flex-[1_1_0%] space-y-6">
             <Card>
               <CardHeader>
@@ -384,8 +298,6 @@ export default function MyCartContainer() {
               <CardBody className="space-y-5 text-base">
                 {isLoading && <p>Đang tải giỏ hàng...</p>}
                 {error && <p className="text-red-500">{error.message}</p>}
-
-                {/* Danh sách sản phẩm trong giỏ */}
                 {data?.cart_items.map((item) => (
                   <div
                     key={item.cart_item_id}
@@ -417,39 +329,8 @@ export default function MyCartContainer() {
                         </div>
                       </div>
                     </div>
-
-                    <div className="pt-2 space-y-1">
-                      <Input
-                        className="w-full"
-                        endContent={
-                          discountLoading[item.cart_item_id] ? (
-                            <Spinner size="sm" />
-                          ) : null
-                        }
-                        placeholder="Mã giảm giá cho sản phẩm này"
-                        size="md"
-                        startContent={<TicketPercent />}
-                        value={discountCodes[item.cart_item_id] || ""}
-                        variant="bordered"
-                        onChange={(e) =>
-                          handleDiscountCodeChange(
-                            item.cart_item_id,
-                            item.product_id,
-                            item.quantity,
-                            e.target.value,
-                          )
-                        }
-                      />
-                      {discountErrors[item.cart_item_id] && (
-                        <p className="text-sm text-red-500">
-                          {discountErrors[item.cart_item_id]}
-                        </p>
-                      )}
-                    </div>
                   </div>
                 ))}
-
-                {/* Tính toán đơn hàng */}
                 <div className="border-t pt-4 space-y-2 text-base">
                   <div className="flex justify-between">
                     <span>Tạm tính</span>
@@ -468,8 +349,6 @@ export default function MyCartContainer() {
                     <span>{formatVND(totalPayment)}</span>
                   </div>
                 </div>
-
-                {/* Nút Thanh Toán */}
                 <Button
                   fullWidth
                   className="mt-4 text-base"
@@ -485,8 +364,6 @@ export default function MyCartContainer() {
           </div>
         </div>
       </div>
-
-      {/* Modal xác nhận thanh toán */}
       <Modal
         backdrop="blur"
         isOpen={isConfirmModalOpen}
@@ -503,7 +380,7 @@ export default function MyCartContainer() {
               width={1280}
             />
             <p className="text-center mt-4">
-              Quét mã để hoàn tất thanh toán, nội dung chuyển khoản là:&nbsp;
+              Quét mã để hoàn tất thanh toán nội dung chuyển khoản là:&nbsp;
               <strong>
                 {userInfo?.user.user_id} - {userInfo?.user.full_name}
               </strong>

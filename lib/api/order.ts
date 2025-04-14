@@ -6,7 +6,6 @@ export interface OrderItem {
   product_id: number;
   quantity: number;
   price: string;
-  discount_code: string;
   product_name: string;
   thumbnail: string;
 }
@@ -39,7 +38,6 @@ export const orderNow = async (
   type: string,
   product_id: number,
   quantity: number,
-  discount_code: string,
   shipping_address: string,
   payment_method: string,
 ) => {
@@ -47,7 +45,6 @@ export const orderNow = async (
     type,
     product_id,
     quantity,
-    discount_code,
     shipping_address,
     payment_method,
   });
