@@ -63,7 +63,7 @@ export default function MyCartContainer() {
     "delivery",
   );
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [_shippingAddress, setShippingAddress] = useState("");
+  const [shippingAddress, setShippingAddress] = useState("");
   const [addressQuery, setAddressQuery] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<
     { label: string; key: string }[]
@@ -187,7 +187,7 @@ export default function MyCartContainer() {
   const totalPayment = (totalPrice ?? 0) + tax + shippingFee;
 
   const handleShowConfirmModal = () => {
-    if (deliveryMethod === "delivery" && !_shippingAddress.trim()) {
+    if (deliveryMethod === "delivery" && !shippingAddress.trim()) {
       addToast({
         title: "Bạn chưa nhập địa chỉ",
         description: "Vui lòng nhập địa chỉ trước khi đặt hàng.",
@@ -202,7 +202,7 @@ export default function MyCartContainer() {
   const handleConfirmCheckout = () => {
     orderNow({
       type: "from_cart",
-      shipping_address: _shippingAddress,
+      shipping_address: shippingAddress,
       payment_method: "bank_transfer",
     });
   };
