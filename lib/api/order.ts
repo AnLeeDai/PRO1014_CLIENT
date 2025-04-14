@@ -6,7 +6,6 @@ export interface OrderItem {
   product_id: number;
   quantity: number;
   price: string;
-  discount_code: string;
   product_name: string;
   thumbnail: string;
 }
@@ -39,21 +38,29 @@ export const orderNow = async (
   type: string,
   product_id: number,
   quantity: number,
-  discount_code: string,
+  shipping_address: string,
+  payment_method: string,
 ) => {
   const res = await axiosInstance.post("?request=post-checkout", {
     type,
     product_id,
     quantity,
-    discount_code,
+    shipping_address,
+    payment_method,
   });
 
   return res.data;
 };
 
-export const orderFromCart = async (type: string) => {
+export const orderFromCart = async (
+  type: string,
+  shipping_address?: string,
+  payment_method?: string,
+) => {
   const res = await axiosInstance.post("?request=post-checkout", {
     type,
+    shipping_address,
+    payment_method,
   });
 
   return res.data;

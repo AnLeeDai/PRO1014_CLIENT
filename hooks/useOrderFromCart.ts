@@ -2,9 +2,10 @@ import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 
 import { orderFromCart } from "@/lib/api/order";
 import { ResponseErr, ResponseSuccess } from "@/types/api";
-
-interface OrderFromCartParams {
+export interface OrderFromCartParams {
   type: string;
+  shipping_address: string;
+  payment_method: string;
 }
 
 interface OrderFromCartResponse {
@@ -20,7 +21,8 @@ export const useOrderFromCart = (
   >,
 ) => {
   return useMutation({
-    mutationFn: ({ type }: OrderFromCartParams) => orderFromCart(type),
+    mutationFn: ({ type, shipping_address, payment_method }) =>
+      orderFromCart(type, shipping_address, payment_method),
     ...options,
   });
 };

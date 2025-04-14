@@ -7,8 +7,9 @@ import {
   Chip,
   Image,
   Divider,
+  Skeleton,
 } from "@heroui/react";
-import { Truck, CheckCircle } from "lucide-react";
+import { Truck, CheckCircle, XCircle, Clock } from "lucide-react";
 
 import { siteConfig } from "@/config/site";
 import Forward from "@/components/forward";
@@ -24,7 +25,77 @@ export default function OrderContainer() {
       minimumFractionDigits: 0,
     }).format(value);
 
-  if (isLoading) return <p>Đang tải đơn hàng...</p>;
+  const getStatusChip = (status: string) => {
+    switch (status) {
+      case "pending":
+        return (
+          <Chip color="warning" startContent={<Clock size={16} />}>
+            Đang chờ xử lý
+          </Chip>
+        );
+      case "delivered":
+        return (
+          <Chip color="primary" startContent={<Truck size={16} />}>
+            Đã giao hàng
+          </Chip>
+        );
+      case "completed":
+        return (
+          <Chip color="success" startContent={<CheckCircle size={16} />}>
+            Hoàn thành
+          </Chip>
+        );
+      case "cancelled":
+        return (
+          <Chip color="danger" startContent={<XCircle size={16} />}>
+            Đã hủy
+          </Chip>
+        );
+      default:
+        return (
+          <Chip color="default" startContent={<Clock size={16} />}>
+            Không xác định
+          </Chip>
+        );
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        {[...Array(3)].map((_, index) => (
+          <Card key={index}>
+            <CardHeader className="flex justify-between items-center">
+              <div>
+                <Skeleton className="h-6 w-40" />
+                <Skeleton className="h-4 w-32 mt-2" />
+              </div>
+              <Skeleton className="h-6 w-20" />
+            </CardHeader>
+            <CardBody className="space-y-4">
+              {[...Array(2)].map((_, itemIndex) => (
+                <div key={itemIndex} className="flex items-start gap-4">
+                  <Skeleton className="h-20 w-20 rounded" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                  <Skeleton className="h-5 w-20" />
+                </div>
+              ))}
+
+              <Divider className="my-2" />
+
+              <div className="flex justify-between items-center">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            </CardBody>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   if (data?.orders.length === 0) {
     return (
@@ -49,18 +120,7 @@ export default function OrderContainer() {
               <p className="text-sm">Ngày mua: {order.created_at}</p>
             </div>
 
-            <Chip
-              color={order.status === "completed" ? "success" : "warning"}
-              startContent={
-                order.status === "completed" ? (
-                  <CheckCircle size={16} />
-                ) : (
-                  <Truck size={16} />
-                )
-              }
-            >
-              {order.status === "completed" ? "Đã giao" : "Đang xử lý"}
-            </Chip>
+            {getStatusChip(order.status)}
           </CardHeader>
 
           <CardBody className="space-y-4">

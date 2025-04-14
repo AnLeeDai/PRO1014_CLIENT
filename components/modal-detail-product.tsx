@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Modal,
   ModalContent,
@@ -12,25 +13,32 @@ import {
   Skeleton,
   Input,
   addToast,
+  Chip,
+  Autocomplete,
+  AutocompleteItem,
+  ModalFooter,
 } from "@heroui/react";
-import {
-  BaggageClaim,
-  ListOrdered,
-  ShoppingCart,
-  TicketPercent,
-} from "lucide-react";
-import { useState } from "react";
+import { BaggageClaim, ListOrdered, MapPin, ShoppingCart } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 
 import { useProductByID } from "@/hooks/useProductByID";
 import { useOrderNow } from "@/hooks/useBuyNow";
 import { useCreateCart } from "@/hooks/useCreateOrder";
 import { useCart } from "@/hooks/useCart";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 interface IModalDetailProductProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   productId: number;
   onClose: () => void;
+}
+
+interface IFormInputs {
+  address: string;
+  quantity: number;
+  discountCode: string;
 }
 
 export default function ModalDetailProduct({
@@ -41,9 +49,38 @@ export default function ModalDetailProduct({
 }: IModalDetailProductProps) {
   const { data: productData, isLoading: productLoading } =
     useProductByID(productId);
-
   const { refetch: refetchCart } = useCart();
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    getValues,
+    formState: { errors },
+  } = useForm<IFormInputs>({
+    defaultValues: {
+      address: "",
+      quantity: 1,
+      discountCode: "",
+    },
+  });
+
+  const addressValue = watch("address");
+  const [addressSuggestions, setAddressSuggestions] = useState<
+    { label: string; key: string }[]
+  >([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [isQRModalOpen, setQRModalOpen] = useState(false);
+
+  const [isGettingCurrentLocation, setIsGettingCurrentLocation] =
+    useState(false);
+  const queryTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const { data: userInfo } = useUserInfo();
+
+  // Gọi API orderNow => "buy_now"
   const { mutate: orderNow, isPending: orderNowPending } = useOrderNow({
     onSuccess: (data) => {
       addToast({
@@ -51,6 +88,7 @@ export default function ModalDetailProduct({
         description: data.message,
         color: "success",
       });
+      setQRModalOpen(false);
     },
 
     onError: (error) => {
@@ -62,6 +100,7 @@ export default function ModalDetailProduct({
     },
   });
 
+  // Gọi API thêm vào giỏ hàng
   const { mutate: createCart, isPending: createCartPending } = useCreateCart({
     onSuccess: (data) => {
       addToast({
@@ -84,38 +123,158 @@ export default function ModalDetailProduct({
 
   const data = productData?.product;
 
-  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(1);
-  const [discountCode, setDiscountCode] = useState("");
+  // Fetch gợi ý địa chỉ
+  useEffect(() => {
+    if (!addressValue || addressValue.length < 3) {
+      setAddressSuggestions([]);
+
+      return;
+    }
+    if (queryTimeout.current) {
+      clearTimeout(queryTimeout.current);
+    }
+    queryTimeout.current = setTimeout(async () => {
+      setIsSearchingAddress(true);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+            addressValue,
+          )}&format=json&addressdetails=1&limit=5&countrycodes=vn`,
+        );
+        const json = await res.json();
+        const suggestions = json.map((item: any, idx: number) => ({
+          label: item.display_name,
+          key: String(idx),
+        }));
+
+        setAddressSuggestions(suggestions);
+      } catch (err) {
+        setAddressSuggestions([]);
+      } finally {
+        setIsSearchingAddress(false);
+      }
+    }, 300);
+
+    return () => {
+      if (queryTimeout.current) {
+        clearTimeout(queryTimeout.current);
+      }
+    };
+  }, [addressValue]);
+
+  // Người dùng chọn 1 địa chỉ từ Autocomplete
+  const handleSelectAddress = (key: string | number | null) => {
+    if (key === null) return;
+    const selected = addressSuggestions.find((item) => item.key === key);
+
+    if (selected) {
+      setValue("address", selected.label);
+    }
+  };
+
+  // Lấy địa chỉ hiện tại (geolocation)
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      addToast({
+        title: "Trình duyệt không hỗ trợ",
+        description: "Không thể lấy vị trí hiện tại",
+        color: "danger",
+      });
+
+      return;
+    }
+    setIsGettingCurrentLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
+          );
+          const dataGeo = await response.json();
+          const address = dataGeo?.display_name || "Không tìm thấy địa chỉ";
+
+          setValue("address", address);
+          addToast({
+            title: "Lấy vị trí thành công",
+            description: address,
+            color: "success",
+          });
+        } catch (error) {
+          addToast({
+            title: "Lỗi khi lấy địa chỉ",
+            description: "Vui lòng thử lại sau",
+            color: "danger",
+          });
+        } finally {
+          setIsGettingCurrentLocation(false);
+        }
+      },
+
+      () => {
+        addToast({
+          title: "Không thể lấy vị trí",
+          description: "Vui lòng cho phép quyền truy cập vị trí",
+          color: "danger",
+        });
+        setIsGettingCurrentLocation(false);
+      },
+    );
+  };
 
   if (!isOpen) return null;
 
+  // Zoom ảnh
   const handleImageClick = (img_url: string) => {
     setZoomedImage(img_url);
   };
-
   const closeZoom = () => {
     setZoomedImage(null);
   };
 
-  const handleBuyNow = (productId: number | undefined) => {
-    if (!productId) return;
+  // Thêm sản phẩm vào giỏ
+  const onAddToCart = (values: IFormInputs) => {
+    if (!data?.id) return;
 
-    orderNow({
-      type: "buy_now",
-      product_id: productId,
-      quantity: quantity,
-      discount_code: discountCode,
+    createCart({
+      product_id: data.id,
+      quantity: values.quantity,
     });
   };
 
-  const handleAddToCart = (productId: number | undefined) => {
-    if (!productId) return;
+  // Mở modal QR
+  const onShowQRModal = () => {
+    if (!getValues("address").trim()) {
+      addToast({
+        title: "Bạn chưa nhập địa chỉ",
+        description: "Vui lòng nhập địa chỉ trước khi đặt hàng.",
+        color: "warning",
+      });
 
-    createCart({
-      product_id: productId,
-      quantity: quantity,
-      discount_code: discountCode,
+      return;
+    }
+    setQRModalOpen(true);
+  };
+
+  // Mua ngay => Gửi lên server
+  const onBuyNow = (values: IFormInputs) => {
+    if (!data?.id) return;
+    if (!values.address.trim()) {
+      addToast({
+        title: "Bạn chưa nhập địa chỉ",
+        description: "Vui lòng nhập địa chỉ trước khi đặt hàng.",
+        color: "warning",
+      });
+
+      return;
+    }
+
+    orderNow({
+      type: "buy_now",
+      product_id: data?.id,
+      quantity: values.quantity,
+      shipping_address: values.address,
+      payment_method: "bank_transfer",
     });
   };
 
@@ -183,30 +342,53 @@ export default function ModalDetailProduct({
                         className="text-sm list-disc pl-5 space-y-1 mt-4"
                       />
 
-                      <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                        <Input
-                          className="flex 1"
-                          label="Số lượng"
-                          min={1}
-                          placeholder="Nhập số lượng"
-                          size="md"
-                          startContent={<ListOrdered />}
-                          type="number"
-                          value={quantity.toString()}
-                          onChange={(e) =>
-                            setQuantity(parseInt(e.target.value) || 1)
-                          }
-                        />
+                      <div className="grid w-full gap-4 mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <Input
+                            label="Số lượng"
+                            min={1}
+                            placeholder="Nhập số lượng"
+                            size="md"
+                            startContent={<ListOrdered />}
+                            type="number"
+                            {...register("quantity", { valueAsNumber: true })}
+                          />
+                          <div className="flex flex-col gap-3">
+                            <Autocomplete
+                              className="w-full"
+                              inputValue={addressValue}
+                              isLoading={isSearchingAddress}
+                              label="Địa chỉ giao hàng"
+                              startContent={
+                                <MapPin className="text-muted-foreground" />
+                              }
+                              onInputChange={(value) =>
+                                setValue("address", value)
+                              }
+                              onSelectionChange={handleSelectAddress}
+                            >
+                              {addressSuggestions.map((item) => (
+                                <AutocompleteItem key={item.key}>
+                                  {item.label}
+                                </AutocompleteItem>
+                              ))}
+                            </Autocomplete>
 
-                        <Input
-                          className="flex 1"
-                          label="Mã giảm giá (voucher)"
-                          placeholder="Nhập mã giảm giá"
-                          size="md"
-                          startContent={<TicketPercent />}
-                          value={discountCode}
-                          onChange={(e) => setDiscountCode(e.target.value)}
-                        />
+                            <Tooltip content="Vị trí chỉ mang tính chất tương đối">
+                              <Chip
+                                className="cursor-pointer"
+                                color="success"
+                                isDisabled={isGettingCurrentLocation}
+                                variant="faded"
+                                onClick={handleUseCurrentLocation}
+                              >
+                                {isGettingCurrentLocation
+                                  ? "Đang lấy vị trí..."
+                                  : "📍 Dùng vị trí hiện tại"}
+                              </Chip>
+                            </Tooltip>
+                          </div>
+                        </div>
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
@@ -216,7 +398,9 @@ export default function ModalDetailProduct({
                           isLoading={createCartPending}
                           size="lg"
                           startContent={<BaggageClaim />}
-                          onPress={() => handleAddToCart(data?.id)}
+                          onPress={() => {
+                            handleSubmit(onAddToCart)();
+                          }}
                         >
                           Thêm vào giỏ hàng
                         </Button>
@@ -227,7 +411,7 @@ export default function ModalDetailProduct({
                           isLoading={orderNowPending}
                           size="lg"
                           startContent={<ShoppingCart />}
-                          onPress={() => handleBuyNow(data?.id)}
+                          onPress={onShowQRModal}
                         >
                           Mua ngay
                         </Button>
@@ -269,6 +453,7 @@ export default function ModalDetailProduct({
         </ModalContent>
       </Modal>
 
+      {/* Zoom ảnh */}
       {zoomedImage && (
         <Modal backdrop="blur" isOpen={true} size="4xl" onClose={closeZoom}>
           <ModalContent>
@@ -284,6 +469,44 @@ export default function ModalDetailProduct({
                 />
               </div>
             </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* Modal thanh toán QR */}
+      {isQRModalOpen && (
+        <Modal
+          backdrop="blur"
+          isOpen={isQRModalOpen}
+          size="md"
+          onClose={() => setQRModalOpen(false)}
+        >
+          <ModalContent>
+            <ModalHeader>Quét mã QR để thanh toán</ModalHeader>
+            <ModalBody>
+              <Image
+                alt="Mã QR"
+                height={500}
+                src="/my_qr_code.png"
+                width={1280}
+              />
+              <p className="text-center mt-4">
+                Quét mã để hoàn tất thanh toán nội dung chuyển khoản là:&nbsp;
+                <strong>
+                  {userInfo?.user.user_id} - {userInfo?.user.full_name}
+                </strong>
+              </p>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                fullWidth
+                color="primary"
+                size="lg"
+                onPress={() => handleSubmit(onBuyNow)()}
+              >
+                Xác nhận thanh toán
+              </Button>
+            </ModalFooter>
           </ModalContent>
         </Modal>
       )}

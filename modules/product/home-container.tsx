@@ -22,7 +22,7 @@ export default function HomeContainer() {
   const { data: tabletData, isLoading: tabletLoading } = useProduct(8);
   const { data: laptopData, isLoading: laptopLoading } = useProduct(9);
   const { data: accessoriesData, isLoading: accessoriesLoading } =
-    useProduct(10);
+    useProduct(4);
 
   return (
     <>

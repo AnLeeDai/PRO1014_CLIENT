@@ -5,7 +5,6 @@ export interface CartItem {
   product_id: number;
   quantity: number;
   original_price: string;
-  discount_code: string;
   product_name: string;
   thumbnail: string;
   in_stock: number;
@@ -27,15 +26,10 @@ export const getAllCart = async (): Promise<GetAllCartResponse> => {
   return res.data;
 };
 
-export const createCart = async (
-  product_id: number,
-  quantity: number,
-  discount_code: string,
-) => {
+export const createCart = async (product_id: number, quantity: number) => {
   const res = await axiosInstance.post("?request=post-cart", {
     product_id,
     quantity,
-    discount_code,
   });
 
   return res.data;
@@ -44,12 +38,10 @@ export const createCart = async (
 export const updateCartDiscount = async (
   product_id: number,
   quantity: number,
-  discount_code: string,
 ) => {
   const res = await axiosInstance.put("?request=put-cart", {
     product_id,
     quantity,
-    discount_code,
   });
 
   return res.data;
