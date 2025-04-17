@@ -61,7 +61,7 @@ export default function AccessoriesContainer() {
   const brand = watchedBrand !== "all" ? watchedBrand : undefined;
 
   const { data, isLoading, isFetching } = useProduct(
-    10,
+    4,
     debouncedSearch,
     minPrice,
     maxPrice,

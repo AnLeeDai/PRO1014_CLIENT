@@ -60,7 +60,7 @@ export default function PhoneContainer() {
   const brand = watchedBrand !== "all" ? watchedBrand : undefined;
 
   const { data, isLoading, isFetching } = useProduct(
-    7,
+    1,
     debouncedSearch,
     minPrice,
     maxPrice,

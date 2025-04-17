@@ -61,7 +61,7 @@ export default function LaptopContainer() {
   const brand = watchedBrand !== "all" ? watchedBrand : undefined;
 
   const { data, isLoading, isFetching } = useProduct(
-    9,
+    3,
     debouncedSearch,
     minPrice,
     maxPrice,

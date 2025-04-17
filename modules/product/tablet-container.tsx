@@ -60,7 +60,7 @@ export default function TabletContainer() {
   const brand = watchedBrand !== "all" ? watchedBrand : undefined;
 
   const { data, isLoading, isFetching } = useProduct(
-    8,
+    2,
     debouncedSearch,
     minPrice,
     maxPrice,
