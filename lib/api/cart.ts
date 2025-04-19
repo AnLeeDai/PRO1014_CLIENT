@@ -9,7 +9,6 @@ export interface CartItem {
   thumbnail: string;
   in_stock: number;
   percent_value: number | null;
-  final_price: string;
   cart_id: number;
   status: string;
 }

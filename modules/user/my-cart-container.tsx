@@ -38,6 +38,7 @@ const formatVND = (value: number) =>
 
 export default function MyCartContainer() {
   const { data, isLoading, error, refetch } = useCart();
+
   const { data: userInfo } = useUserInfo();
   const getUserInfo = userInfo?.user;
   const { mutate: orderNow, isPending: orderNowPending } = useOrderFromCart({
@@ -179,7 +180,7 @@ export default function MyCartContainer() {
   };
 
   const totalPrice = data?.cart_items.reduce(
-    (sum, item) => sum + parseFloat(item.final_price) * item.quantity,
+    (sum, item) => sum + parseFloat(item.original_price) * item.quantity,
     0,
   );
   const shippingFee = deliveryMethod === "delivery" ? 50000 : 0;
@@ -323,7 +324,7 @@ export default function MyCartContainer() {
                           </div>
                           <div className="text-right text-base font-semibold whitespace-nowrap">
                             {formatVND(
-                              parseFloat(item.final_price) * item.quantity,
+                              parseFloat(item.original_price) * item.quantity,
                             )}
                           </div>
                         </div>
