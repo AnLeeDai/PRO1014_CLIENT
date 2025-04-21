@@ -1,4 +1,4 @@
-import { useMutation, UseMutationOptions } from "@tanstack/react-query";
+GetAllCartResponseimport { useMutation, UseMutationOptions } from "@tanstack/react-query";
 
 import { updateUserInfo } from "@/lib/api/user";
 import { ResponseErr, ResponseSuccess } from "@/types/api";

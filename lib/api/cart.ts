@@ -45,3 +45,20 @@ export const updateCartDiscount = async (
 
   return res.data;
 };
+
+export const deleteCart = async (product_id: number) => {
+  const res = await axiosInstance.delete("?request=delete-cart-item", {
+    data: { product_id },
+  });
+
+  return res.data;
+};
+
+export const updateCart = async (product_id: number, quantity: number) => {
+  const res = await axiosInstance.put("?request=put-cart", {
+    product_id,
+    quantity,
+  });
+
+  return res.data;
+};
