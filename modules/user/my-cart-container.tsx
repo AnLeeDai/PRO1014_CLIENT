@@ -1,46 +1,28 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Image,
-  Tab,
-  Tabs,
-  Chip,
-  addToast,
-  Autocomplete,
-  AutocompleteItem,
-  Tooltip,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-} from "@heroui/react";
-import { CreditCard, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { addToast } from "@heroui/react";
+
+import ModalConfirmPayment from "../../components/modal-confirm-payment";
+
+import TransportCard from "./transport-card";
+import InfomationCard from "./infomation-card";
+import TotalProduct from "./total-product";
 
 import Forward from "@/components/forward";
 import { siteConfig } from "@/config/site";
 import { useCart } from "@/hooks/useCart";
 import { useOrderFromCart } from "@/hooks/useOrderFromCart";
+import { useOrderHistory } from "@/hooks/useOrderHistory";
 import { useUserInfo } from "@/hooks/useUserInfo";
-
-const formatVND = (value: number) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    minimumFractionDigits: 0,
-  }).format(value);
 
 export default function MyCartContainer() {
   const { data, isLoading, error, refetch } = useCart();
+  const { refetch: refetchOrderHistory } = useOrderHistory();
 
   const { data: userInfo } = useUserInfo();
   const getUserInfo = userInfo?.user;
+
   const { mutate: orderNow, isPending: orderNowPending } = useOrderFromCart({
     onSuccess: (res) => {
       addToast({
@@ -50,7 +32,9 @@ export default function MyCartContainer() {
       });
       setConfirmModalOpen(false);
       refetch();
+      refetchOrderHistory();
     },
+
     onError: (err) => {
       addToast({
         title: "Lỗi khi đặt hàng",
@@ -140,7 +124,9 @@ export default function MyCartContainer() {
 
       return;
     }
+
     setIsGettingCurrentLocation(true);
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
@@ -183,9 +169,6 @@ export default function MyCartContainer() {
     (sum, item) => sum + parseFloat(item.original_price) * item.quantity,
     0,
   );
-  const shippingFee = deliveryMethod === "delivery" ? 50000 : 0;
-  const tax = (totalPrice ?? 0) * 0.1;
-  const totalPayment = (totalPrice ?? 0) + tax + shippingFee;
 
   const handleShowConfirmModal = () => {
     if (deliveryMethod === "delivery" && !shippingAddress.trim()) {
@@ -215,196 +198,46 @@ export default function MyCartContainer() {
           <Forward href={siteConfig.routes.home} label="Quay lại trang chủ" />
           <h1 className="text-3xl font-bold">Giỏ hàng của tôi</h1>
         </div>
+
         <div className="flex flex-col gap-6 lg:flex-row">
           <div className="flex-[2_1_0%] space-y-6">
-            <Card>
-              <CardHeader>
-                <h2 className="text-xl font-semibold">Phương thức giao hàng</h2>
-              </CardHeader>
-              <CardBody>
-                <Tabs
-                  aria-label="Phương thức giao hàng"
-                  selectedKey={deliveryMethod}
-                  variant="bordered"
-                  onSelectionChange={(key) =>
-                    setDeliveryMethod(key as "delivery" | "pickup")
-                  }
-                >
-                  <Tab key="delivery" title="Giao hàng">
-                    <Autocomplete
-                      className="mb-4"
-                      inputValue={addressQuery}
-                      isLoading={isSearchingAddress}
-                      label="Địa chỉ giao hàng của bạn"
-                      startContent={
-                        <MapPin className="text-muted-foreground" />
-                      }
-                      onInputChange={(value) => setAddressQuery(value)}
-                      onSelectionChange={handleSelectAddress}
-                    >
-                      {addressSuggestions.map((item) => (
-                        <AutocompleteItem key={item.key}>
-                          {item.label}
-                        </AutocompleteItem>
-                      ))}
-                    </Autocomplete>
-                    <div className="space-y-4 text-base">
-                      <Tooltip content="Vị trí chỉ mang tính chất tương đối, có thể không chính xác">
-                        <Chip
-                          className="cursor-pointer"
-                          color="success"
-                          isDisabled={isGettingCurrentLocation}
-                          variant="faded"
-                          onClick={handleUseCurrentLocation}
-                        >
-                          {isGettingCurrentLocation
-                            ? "Đang lấy vị trí..."
-                            : "📍 Dùng vị trí hiện tại của bạn"}
-                        </Chip>
-                      </Tooltip>
-                    </div>
-                  </Tab>
-                  <Tab key="pickup" title="Tự đến lấy">
-                    <p className="text-base italic">
-                      Tự đến lấy hàng tại cửa hàng sẽ giúp bạn{" "}
-                      <strong>không mất phí vận chuyển</strong>.
-                    </p>
-                  </Tab>
-                </Tabs>
-              </CardBody>
-            </Card>
-            <Card>
-              <CardHeader>
-                <h2 className="text-xl font-semibold">Thông tin cá nhân</h2>
-              </CardHeader>
-              <CardBody className="space-y-2 text-base">
-                <div>👤 {getUserInfo?.full_name}</div>
-                <div>📧 {getUserInfo?.email}</div>
-                <div>📞 {getUserInfo?.phone_number}</div>
-              </CardBody>
-            </Card>
+            <TransportCard
+              addressQuery={addressQuery}
+              addressSuggestions={addressSuggestions}
+              deliveryMethod={deliveryMethod}
+              handleSelectAddress={handleSelectAddress}
+              handleUseCurrentLocation={handleUseCurrentLocation}
+              isGettingCurrentLocation={isGettingCurrentLocation}
+              isSearchingAddress={isSearchingAddress}
+              setAddressQuery={setAddressQuery}
+              setDeliveryMethod={setDeliveryMethod}
+            />
+
+            <InfomationCard getUserInfo={getUserInfo} />
           </div>
+
           <div className="flex-[1_1_0%] space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <h2 className="mr-2 text-xl font-semibold">
-                    Tóm tắt đơn hàng
-                  </h2>
-                  <Chip color="primary" size="md" variant="flat">
-                    {data?.cart_items.length ?? 0}
-                  </Chip>
-                </div>
-              </CardHeader>
-              <CardBody className="space-y-5 text-base">
-                {isLoading && <p>Đang tải giỏ hàng...</p>}
-                {error && <p className="text-red-500">{error.message}</p>}
-                {data?.cart_items.map((item) => (
-                  <div
-                    key={item.cart_item_id}
-                    className="rounded-lg border p-4 space-y-3"
-                  >
-                    <div className="flex items-start gap-4">
-                      <Image
-                        alt={item.product_name}
-                        className="rounded-lg object-cover"
-                        height={100}
-                        src={item.thumbnail}
-                        width={100}
-                      />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-base font-semibold">
-                              {item.product_name}
-                            </p>
-                            <p className="text-sm text-zinc-400">
-                              Số lượng: x{item.quantity}
-                            </p>
-                          </div>
-                          <div className="text-right text-base font-semibold whitespace-nowrap">
-                            {formatVND(
-                              parseFloat(item.original_price) * item.quantity,
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div className="border-t pt-4 space-y-2 text-base">
-                  <div className="flex justify-between">
-                    <span>Tạm tính</span>
-                    <span>{formatVND(totalPrice ?? 0)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Thuế (10%)</span>
-                    <span>{formatVND(tax)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Phí vận chuyển</span>
-                    <span>{formatVND(shippingFee)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-xl pt-2">
-                    <span>Tổng cộng</span>
-                    <span>{formatVND(totalPayment)}</span>
-                  </div>
-                </div>
-                <Button
-                  fullWidth
-                  className="mt-4 text-base"
-                  color="primary"
-                  size="lg"
-                  startContent={<CreditCard />}
-                  onPress={handleShowConfirmModal}
-                >
-                  Thanh toán {formatVND(totalPayment)}
-                </Button>
-              </CardBody>
-            </Card>
+            <TotalProduct
+              data={data}
+              error={error}
+              handleShowConfirmModal={handleShowConfirmModal}
+              isLoading={isLoading}
+              orderNowPending={orderNowPending}
+              shippingFee={0}
+              totalPayment={(totalPrice || 0) + 0}
+              totalPrice={totalPrice || 0}
+            />
           </div>
         </div>
       </div>
-      <Modal
-        backdrop="blur"
-        isOpen={isConfirmModalOpen}
-        size="md"
-        onClose={() => setConfirmModalOpen(false)}
-      >
-        <ModalContent>
-          <ModalHeader>Xác nhận thanh toán</ModalHeader>
-          <ModalBody>
-            <Image
-              alt="QR code thanh toán"
-              height={500}
-              src="/my_qr_code.png"
-              width={1280}
-            />
-            <p className="text-center mt-4">
-              Quét mã để hoàn tất thanh toán nội dung chuyển khoản là:&nbsp;
-              <strong>
-                {userInfo?.user.user_id} - {userInfo?.user.full_name}
-              </strong>
-            </p>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              color="default"
-              variant="flat"
-              onPress={() => setConfirmModalOpen(false)}
-            >
-              Hủy
-            </Button>
-            <Button
-              color="primary"
-              isLoading={orderNowPending}
-              onPress={handleConfirmCheckout}
-            >
-              Xác nhận
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+
+      <ModalConfirmPayment
+        handleConfirmCheckout={handleConfirmCheckout}
+        isConfirmModalOpen={isConfirmModalOpen}
+        orderNowPending={orderNowPending}
+        setConfirmModalOpen={setConfirmModalOpen}
+        userInfo={userInfo}
+      />
     </>
   );
 }

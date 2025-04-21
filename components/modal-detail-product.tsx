@@ -16,11 +16,12 @@ import {
   Chip,
   Autocomplete,
   AutocompleteItem,
-  ModalFooter,
 } from "@heroui/react";
 import { BaggageClaim, ListOrdered, MapPin, ShoppingCart } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+
+import ModalConfirmPayment from "./modal-confirm-payment";
 
 import { useProductByID } from "@/hooks/useProductByID";
 import { useOrderNow } from "@/hooks/useBuyNow";
@@ -161,6 +162,12 @@ export default function ModalDetailProduct({
       }
     };
   }, [addressValue]);
+
+  useEffect(() => {
+    if (userInfo?.user.address) {
+      setValue("address", userInfo?.user.address);
+    }
+  }, [userInfo?.user.address]);
 
   // Người dùng chọn 1 địa chỉ từ Autocomplete
   const handleSelectAddress = (key: string | number | null) => {
@@ -353,6 +360,7 @@ export default function ModalDetailProduct({
                             type="number"
                             {...register("quantity", { valueAsNumber: true })}
                           />
+
                           <div className="flex flex-col gap-3">
                             <Autocomplete
                               className="w-full"
@@ -475,40 +483,13 @@ export default function ModalDetailProduct({
 
       {/* Modal thanh toán QR */}
       {isQRModalOpen && (
-        <Modal
-          backdrop="blur"
-          isOpen={isQRModalOpen}
-          size="md"
-          onClose={() => setQRModalOpen(false)}
-        >
-          <ModalContent>
-            <ModalHeader>Quét mã QR để thanh toán</ModalHeader>
-            <ModalBody>
-              <Image
-                alt="Mã QR"
-                height={500}
-                src="/my_qr_code.png"
-                width={1280}
-              />
-              <p className="text-center mt-4">
-                Quét mã để hoàn tất thanh toán nội dung chuyển khoản là:&nbsp;
-                <strong>
-                  {userInfo?.user.user_id} - {userInfo?.user.full_name}
-                </strong>
-              </p>
-            </ModalBody>
-            <ModalFooter>
-              <Button
-                fullWidth
-                color="primary"
-                size="lg"
-                onPress={() => handleSubmit(onBuyNow)()}
-              >
-                Xác nhận thanh toán
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+        <ModalConfirmPayment
+          handleConfirmCheckout={handleSubmit(onBuyNow)}
+          isConfirmModalOpen={isQRModalOpen}
+          orderNowPending={orderNowPending}
+          setConfirmModalOpen={setQRModalOpen}
+          userInfo={userInfo}
+        />
       )}
     </>
   );
