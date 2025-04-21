@@ -5,8 +5,7 @@ import { siteConfig } from "@/config/site";
 
 const axiosInstance = axios.create({
   baseURL:
-    // process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "http://localhost/PRO1014_SERVER/",
+    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost/PRO1014_SERVER/",
   headers: {
     "Content-Type": "application/json",
   },
