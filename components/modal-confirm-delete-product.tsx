@@ -49,7 +49,7 @@ export default function ModalConfirmDeleteProduct(
     },
   });
 
-  const handlereDeleteProduct = () => {
+  const handleDeleteProduct = () => {
     mutate({ product_id: productInfo.product_id });
   };
 
@@ -89,7 +89,7 @@ export default function ModalConfirmDeleteProduct(
                   color="danger"
                   isLoading={isPending}
                   size="lg"
-                  onPress={() => handlereDeleteProduct()}
+                  onPress={() => handleDeleteProduct()}
                 >
                   Xóa
                 </Button>
