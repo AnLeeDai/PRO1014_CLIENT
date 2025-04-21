@@ -27,6 +27,7 @@ import { siteConfig } from "@/config/site";
 import { useCart } from "@/hooks/useCart";
 import { useOrderFromCart } from "@/hooks/useOrderFromCart";
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { useOrderHistory } from "@/hooks/useOrderHistory";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -37,9 +38,11 @@ const formatVND = (value: number) =>
 
 export default function MyCartContainer() {
   const { data, isLoading, error, refetch } = useCart();
+  const { refetch: refetchOrderHistory } = useOrderHistory();
 
   const { data: userInfo } = useUserInfo();
   const getUserInfo = userInfo?.user;
+
   const { mutate: orderNow, isPending: orderNowPending } = useOrderFromCart({
     onSuccess: (res) => {
       addToast({
@@ -49,7 +52,9 @@ export default function MyCartContainer() {
       });
       setConfirmModalOpen(false);
       refetch();
+      refetchOrderHistory();
     },
+
     onError: (err) => {
       addToast({
         title: "Lỗi khi đặt hàng",
