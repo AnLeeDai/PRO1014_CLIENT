@@ -21,6 +21,8 @@ import { BaggageClaim, ListOrdered, MapPin, ShoppingCart } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 
+import ModalConfirmPayment from "./modal-confirm-payment";
+
 import { useProductByID } from "@/hooks/useProductByID";
 import { useOrderNow } from "@/hooks/useBuyNow";
 import { useCreateCart } from "@/hooks/useCreateOrder";
@@ -481,51 +483,13 @@ export default function ModalDetailProduct({
 
       {/* Modal thanh toán QR */}
       {isQRModalOpen && (
-        <Modal
-          backdrop="blur"
-          isOpen={isQRModalOpen}
-          size="md"
-          onClose={() => setQRModalOpen(false)}
-        >
-          <ModalContent>
-            <ModalHeader>Quét mã QR để thanh toán</ModalHeader>
-            <ModalBody>
-              <Image
-                alt="Mã QR"
-                height={500}
-                src="/my_qr_code.png"
-                width={1280}
-              />
-              <p className="text-center mt-4">
-                Quét mã để hoàn tất thanh toán nội dung chuyển khoản là:&nbsp;
-                <strong>
-                  {userInfo?.user.user_id} - {userInfo?.user.full_name}
-                </strong>
-              </p>
-
-              <div className="mt-4 flex items-center justify-between gap-4">
-                <Button
-                  fullWidth
-                  color="default"
-                  size="lg"
-                  variant="flat"
-                  onPress={() => setQRModalOpen(false)}
-                >
-                  Hủy
-                </Button>
-
-                <Button
-                  fullWidth
-                  color="primary"
-                  size="lg"
-                  onPress={() => handleSubmit(onBuyNow)()}
-                >
-                  Xác nhận thanh toán
-                </Button>
-              </div>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
+        <ModalConfirmPayment
+          handleConfirmCheckout={handleSubmit(onBuyNow)}
+          isConfirmModalOpen={isQRModalOpen}
+          orderNowPending={orderNowPending}
+          setConfirmModalOpen={setQRModalOpen}
+          userInfo={userInfo}
+        />
       )}
     </>
   );
