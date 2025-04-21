@@ -16,7 +16,6 @@ import {
   Chip,
   Autocomplete,
   AutocompleteItem,
-  ModalFooter,
 } from "@heroui/react";
 import { BaggageClaim, ListOrdered, MapPin, ShoppingCart } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
@@ -161,6 +160,12 @@ export default function ModalDetailProduct({
       }
     };
   }, [addressValue]);
+
+  useEffect(() => {
+    if (userInfo?.user.address) {
+      setValue("address", userInfo?.user.address);
+    }
+  }, [userInfo?.user.address]);
 
   // Người dùng chọn 1 địa chỉ từ Autocomplete
   const handleSelectAddress = (key: string | number | null) => {
@@ -353,6 +358,7 @@ export default function ModalDetailProduct({
                             type="number"
                             {...register("quantity", { valueAsNumber: true })}
                           />
+
                           <div className="flex flex-col gap-3">
                             <Autocomplete
                               className="w-full"
@@ -496,17 +502,28 @@ export default function ModalDetailProduct({
                   {userInfo?.user.user_id} - {userInfo?.user.full_name}
                 </strong>
               </p>
+
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <Button
+                  fullWidth
+                  color="default"
+                  size="lg"
+                  variant="flat"
+                  onPress={() => setQRModalOpen(false)}
+                >
+                  Hủy
+                </Button>
+
+                <Button
+                  fullWidth
+                  color="primary"
+                  size="lg"
+                  onPress={() => handleSubmit(onBuyNow)()}
+                >
+                  Xác nhận thanh toán
+                </Button>
+              </div>
             </ModalBody>
-            <ModalFooter>
-              <Button
-                fullWidth
-                color="primary"
-                size="lg"
-                onPress={() => handleSubmit(onBuyNow)()}
-              >
-                Xác nhận thanh toán
-              </Button>
-            </ModalFooter>
           </ModalContent>
         </Modal>
       )}

@@ -18,7 +18,6 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalFooter,
 } from "@heroui/react";
 import { CreditCard, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -183,9 +182,8 @@ export default function MyCartContainer() {
     (sum, item) => sum + parseFloat(item.original_price) * item.quantity,
     0,
   );
-  const shippingFee = deliveryMethod === "delivery" ? 50000 : 0;
-  const tax = (totalPrice ?? 0) * 0.1;
-  const totalPayment = (totalPrice ?? 0) + tax + shippingFee;
+  const shippingFee = deliveryMethod === "delivery" ? 0 : 0;
+  const totalPayment = totalPrice ?? 0;
 
   const handleShowConfirmModal = () => {
     if (deliveryMethod === "delivery" && !shippingAddress.trim()) {
@@ -248,6 +246,7 @@ export default function MyCartContainer() {
                         </AutocompleteItem>
                       ))}
                     </Autocomplete>
+
                     <div className="space-y-4 text-base">
                       <Tooltip content="Vị trí chỉ mang tính chất tương đối, có thể không chính xác">
                         <Chip
@@ -338,10 +337,6 @@ export default function MyCartContainer() {
                     <span>{formatVND(totalPrice ?? 0)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Thuế (10%)</span>
-                    <span>{formatVND(tax)}</span>
-                  </div>
-                  <div className="flex justify-between">
                     <span>Phí vận chuyển</span>
                     <span>{formatVND(shippingFee)}</span>
                   </div>
@@ -373,6 +368,7 @@ export default function MyCartContainer() {
       >
         <ModalContent>
           <ModalHeader>Xác nhận thanh toán</ModalHeader>
+
           <ModalBody>
             <Image
               alt="QR code thanh toán"
@@ -386,23 +382,29 @@ export default function MyCartContainer() {
                 {userInfo?.user.user_id} - {userInfo?.user.full_name}
               </strong>
             </p>
+
+            <div className="mt-4 flex items-center justify-between gap-4">
+              <Button
+                fullWidth
+                color="default"
+                size="lg"
+                variant="flat"
+                onPress={() => setConfirmModalOpen(false)}
+              >
+                Hủy
+              </Button>
+
+              <Button
+                fullWidth
+                color="primary"
+                isLoading={orderNowPending}
+                size="lg"
+                onPress={handleConfirmCheckout}
+              >
+                Xác nhận
+              </Button>
+            </div>
           </ModalBody>
-          <ModalFooter>
-            <Button
-              color="default"
-              variant="flat"
-              onPress={() => setConfirmModalOpen(false)}
-            >
-              Hủy
-            </Button>
-            <Button
-              color="primary"
-              isLoading={orderNowPending}
-              onPress={handleConfirmCheckout}
-            >
-              Xác nhận
-            </Button>
-          </ModalFooter>
         </ModalContent>
       </Modal>
     </>
