@@ -17,9 +17,17 @@ import {
   Autocomplete,
   AutocompleteItem,
 } from "@heroui/react";
-import { BaggageClaim, ListOrdered, MapPin, ShoppingCart } from "lucide-react";
+import {
+  BaggageClaim,
+  ListOrdered,
+  MapPin,
+  ShoppingCart,
+  Package,
+} from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 import ModalConfirmPayment from "./modal-confirm-payment";
 
@@ -28,6 +36,22 @@ import { useOrderNow } from "@/hooks/useBuyNow";
 import { useCreateCart } from "@/hooks/useCreateOrder";
 import { useCart } from "@/hooks/useCart";
 import { useUserInfo } from "@/hooks/useUserInfo";
+import { siteConfig } from "@/config/site";
+
+/* -------------------------------------------------- */
+/* Helper: debounce value                             */
+function useDebounce<T>(value: T, delay = 300) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+
+    return () => clearTimeout(id);
+  }, [value, delay]);
+
+  return debounced;
+}
+/* -------------------------------------------------- */
 
 interface IModalDetailProductProps {
   isOpen: boolean;
@@ -39,7 +63,6 @@ interface IModalDetailProductProps {
 interface IFormInputs {
   address: string;
   quantity: number;
-  discountCode: string;
 }
 
 export default function ModalDetailProduct({
@@ -48,9 +71,13 @@ export default function ModalDetailProduct({
   productId,
   onClose,
 }: IModalDetailProductProps) {
+  const router = useRouter();
+  const token = Cookies.get("token");
+
   const { data: productData, isLoading: productLoading } =
     useProductByID(productId);
   const { refetch: refetchCart } = useCart();
+  const { data: userInfo } = useUserInfo();
 
   const {
     register,
@@ -60,156 +87,103 @@ export default function ModalDetailProduct({
     getValues,
     formState: { errors },
   } = useForm<IFormInputs>({
-    defaultValues: {
-      address: "",
-      quantity: 1,
-      discountCode: "",
-    },
+    defaultValues: { address: "", quantity: 1 },
   });
 
+  /* ------------ address autocomplete ------------ */
   const addressValue = watch("address");
-  const [addressSuggestions, setAddressSuggestions] = useState<
+  const debouncedAddress = useDebounce(addressValue, 300);
+  const [addressOptions, setAddressOptions] = useState<
     { label: string; key: string }[]
   >([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
-  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [isQRModalOpen, setQRModalOpen] = useState(false);
+  const controllerRef = useRef<AbortController | null>(null);
 
-  const [isGettingCurrentLocation, setIsGettingCurrentLocation] =
-    useState(false);
-  const queryTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  const { data: userInfo } = useUserInfo();
-
-  // Gọi API orderNow => "buy_now"
-  const { mutate: orderNow, isPending: orderNowPending } = useOrderNow({
-    onSuccess: (data) => {
-      addToast({
-        title: "Đặt hàng thành công, vui lòng chờ admin xác nhận",
-        description: data.message,
-        color: "success",
-      });
-      setQRModalOpen(false);
-    },
-
-    onError: (error) => {
-      addToast({
-        title: "Có lỗi xảy ra trong quá trình đặt hàng",
-        description: error.message,
-        color: "danger",
-      });
-    },
-  });
-
-  // Gọi API thêm vào giỏ hàng
-  const { mutate: createCart, isPending: createCartPending } = useCreateCart({
-    onSuccess: (data) => {
-      addToast({
-        title: "Đã thêm vào giỏ hàng",
-        description: data.message,
-        color: "success",
-      });
-
-      refetchCart();
-    },
-
-    onError: (error) => {
-      addToast({
-        title: "Thêm vào giỏ hàng thất bại",
-        description: error.message,
-        color: "danger",
-      });
-    },
-  });
-
-  const data = productData?.product;
-
-  // Fetch gợi ý địa chỉ
+  /* fetch gợi ý mỗi khi debouncedAddress đổi */
   useEffect(() => {
-    if (!addressValue || addressValue.length < 3) {
-      setAddressSuggestions([]);
+    if (!debouncedAddress || debouncedAddress.length < 3) {
+      setAddressOptions([]);
 
       return;
     }
-    if (queryTimeout.current) {
-      clearTimeout(queryTimeout.current);
-    }
-    queryTimeout.current = setTimeout(async () => {
+
+    /* huỷ request cũ (nếu có) */
+    if (controllerRef.current) controllerRef.current.abort();
+    const controller = new AbortController();
+
+    controllerRef.current = controller;
+
+    (async () => {
       setIsSearchingAddress(true);
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            addressValue,
-          )}&format=json&addressdetails=1&limit=5&countrycodes=vn`,
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(debouncedAddress)}&format=json&addressdetails=1&limit=7&countrycodes=vn`,
+          { signal: controller.signal },
         );
         const json = await res.json();
-        const suggestions = json.map((item: any, idx: number) => ({
-          label: item.display_name,
-          key: String(idx),
-        }));
+        const options =
+          json.length > 0
+            ? json.map((item: any) => ({
+                label: item.display_name,
+                key: String(item.place_id),
+              }))
+            : [];
 
-        setAddressSuggestions(suggestions);
+        setAddressOptions(options);
       } catch (err) {
-        setAddressSuggestions([]);
+        if ((err as { name?: string }).name !== "AbortError") {
+          setAddressOptions([]);
+        }
       } finally {
         setIsSearchingAddress(false);
       }
-    }, 300);
+    })();
+  }, [debouncedAddress]);
 
-    return () => {
-      if (queryTimeout.current) {
-        clearTimeout(queryTimeout.current);
-      }
-    };
-  }, [addressValue]);
-
+  /* đổ địa chỉ mặc định của user */
   useEffect(() => {
     if (userInfo?.user.address) {
-      setValue("address", userInfo?.user.address);
+      setValue("address", userInfo.user.address);
     }
-  }, [userInfo?.user.address]);
+  }, [userInfo?.user.address, setValue]);
 
-  // Người dùng chọn 1 địa chỉ từ Autocomplete
   const handleSelectAddress = (key: string | number | null) => {
-    if (key === null) return;
-    const selected = addressSuggestions.find((item) => item.key === key);
+    const selected = addressOptions.find((o) => o.key === key);
 
-    if (selected) {
-      setValue("address", selected.label);
-    }
+    if (selected) setValue("address", selected.label);
   };
 
-  // Lấy địa chỉ hiện tại (geolocation)
+  /* ------------ geolocation ------------ */
+  const [isGettingCurrentLocation, setIsGettingCurrentLocation] =
+    useState(false);
+
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
-      addToast({
+      return addToast({
         title: "Trình duyệt không hỗ trợ",
         description: "Không thể lấy vị trí hiện tại",
         color: "danger",
       });
-
-      return;
     }
     setIsGettingCurrentLocation(true);
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      async ({ coords: { latitude, longitude } }) => {
         try {
-          const { latitude, longitude } = position.coords;
-          const response = await fetch(
+          const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
           );
-          const dataGeo = await response.json();
-          const address = dataGeo?.display_name || "Không tìm thấy địa chỉ";
+          const json = await res.json();
+          const addr = json?.display_name || "";
 
-          setValue("address", address);
+          setValue("address", addr);
           addToast({
             title: "Lấy vị trí thành công",
-            description: address,
+            description: addr,
             color: "success",
           });
-        } catch (error) {
+        } catch {
           addToast({
-            title: "Lỗi khi lấy địa chỉ",
+            title: "Lỗi lấy vị trí",
             description: "Vui lòng thử lại sau",
             color: "danger",
           });
@@ -217,11 +191,10 @@ export default function ModalDetailProduct({
           setIsGettingCurrentLocation(false);
         }
       },
-
       () => {
         addToast({
           title: "Không thể lấy vị trí",
-          description: "Vui lòng cho phép quyền truy cập vị trí",
+          description: "Hãy cho phép quyền truy cập vị trí",
           color: "danger",
         });
         setIsGettingCurrentLocation(false);
@@ -229,28 +202,59 @@ export default function ModalDetailProduct({
     );
   };
 
-  if (!isOpen) return null;
+  /* ------------ API mutations ------------ */
+  const { mutate: createCart, isPending: createCartPending } = useCreateCart({
+    onSuccess: (data) => {
+      addToast({
+        title: "Đã thêm vào giỏ hàng",
+        description: data.message,
+        color: "success",
+      });
+      refetchCart();
+    },
+    onError: (err) =>
+      addToast({
+        title: "Thêm vào giỏ thất bại",
+        description: err.message,
+        color: "danger",
+      }),
+  });
 
-  // Zoom ảnh
-  const handleImageClick = (img_url: string) => {
-    setZoomedImage(img_url);
-  };
-  const closeZoom = () => {
-    setZoomedImage(null);
-  };
+  const { mutate: orderNow, isPending: orderNowPending } = useOrderNow({
+    onSuccess: (data) =>
+      addToast({
+        title: "Đặt hàng thành công",
+        description: data.message,
+        color: "success",
+      }),
+    onError: (err) =>
+      addToast({
+        title: "Có lỗi xảy ra",
+        description: err.message,
+        color: "danger",
+      }),
+  });
 
-  // Thêm sản phẩm vào giỏ
-  const onAddToCart = (values: IFormInputs) => {
+  /* ------------ submit handlers ------------ */
+  const data = productData?.product;
+
+  const onAddToCart = ({ quantity }: IFormInputs) => {
     if (!data?.id) return;
+    if (!token) {
+      router.replace(siteConfig.routes.login);
 
-    createCart({
-      product_id: data.id,
-      quantity: values.quantity,
-    });
+      return;
+    }
+    createCart({ product_id: data.id, quantity });
   };
 
-  // Mở modal QR
   const onShowQRModal = () => {
+    if (!token) {
+      router.replace(siteConfig.routes.login);
+
+      return;
+    }
+
     if (!getValues("address").trim()) {
       addToast({
         title: "Bạn chưa nhập địa chỉ",
@@ -263,10 +267,9 @@ export default function ModalDetailProduct({
     setQRModalOpen(true);
   };
 
-  // Mua ngay => Gửi lên server
-  const onBuyNow = (values: IFormInputs) => {
+  const onBuyNow = ({ address, quantity }: IFormInputs) => {
     if (!data?.id) return;
-    if (!values.address.trim()) {
+    if (!address.trim()) {
       addToast({
         title: "Bạn chưa nhập địa chỉ",
         description: "Vui lòng nhập địa chỉ trước khi đặt hàng.",
@@ -275,15 +278,20 @@ export default function ModalDetailProduct({
 
       return;
     }
-
     orderNow({
       type: "buy_now",
-      product_id: data?.id,
-      quantity: values.quantity,
-      shipping_address: values.address,
+      product_id: data.id,
+      quantity,
+      shipping_address: address,
       payment_method: "bank_transfer",
     });
   };
+
+  /* ------------ UI state ------------ */
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [isQRModalOpen, setQRModalOpen] = useState(false);
+
+  if (!isOpen) return null;
 
   return (
     <>
@@ -291,8 +299,6 @@ export default function ModalDetailProduct({
         backdrop="blur"
         classNames={{
           header: "border-b-[1px] border-[#292f46]",
-          body: "mt-5 pb-5",
-          footer: "w-full",
         }}
         isOpen={isOpen}
         scrollBehavior="inside"
@@ -301,175 +307,192 @@ export default function ModalDetailProduct({
         onOpenChange={onOpenChange}
       >
         <ModalContent>
-          <>
-            {productLoading ? (
-              <ModalBody>
-                <Skeleton className="w-1/2 h-6 rounded" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <Skeleton className="w-full h-[430px] rounded-lg" />
-                  <div className="space-y-4">
-                    <Skeleton className="w-1/4 h-6 rounded" />
-                    <Skeleton className="w-full h-24 rounded" />
-                    <Skeleton className="w-1/3 h-6 rounded" />
-                    <Skeleton className="w-1/2 h-6 rounded" />
-                    <Skeleton className="w-full h-12 rounded" />
-                  </div>
+          {productLoading ? (
+            /*  Skeleton UI  */
+            <ModalBody>
+              <Skeleton className="w-1/2 h-6 rounded" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <Skeleton className="w-full h-[430px] rounded-lg" />
+                <div className="space-y-4">
+                  <Skeleton className="w-1/4 h-6 rounded" />
+                  <Skeleton className="w-full h-24 rounded" />
+                  <Skeleton className="w-1/3 h-6 rounded" />
+                  <Skeleton className="w-1/2 h-6 rounded" />
+                  <Skeleton className="w-full h-12 rounded" />
                 </div>
-              </ModalBody>
-            ) : (
-              <>
-                <ModalHeader className="text-xl font-semibold">
-                  {data?.product_name}
-                </ModalHeader>
+              </div>
+            </ModalBody>
+          ) : (
+            <>
+              <ModalHeader className="text-xl font-semibold">
+                <Package className="mr-2 inline-block" />
+                {data?.product_name}
+              </ModalHeader>
 
-                <ModalBody>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                    <Image
-                      alt={data?.thumbnail}
-                      height={500}
-                      src={data?.thumbnail}
-                      width={800}
+              <ModalBody>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <Image
+                    alt={data?.thumbnail}
+                    height={500}
+                    src={data?.thumbnail}
+                    width={800}
+                  />
+
+                  {/* ------------ RIGHT COLUMN ------------ */}
+                  <div className="space-y-4">
+                    <p className="text-xl font-bold">
+                      ₫{parseInt(data?.price ?? "0").toLocaleString("vi-VN")}
+                    </p>
+
+                    <Tooltip
+                      showArrow
+                      className="w-[400px]"
+                      classNames={{
+                        base: [
+                          // arrow color
+                          "before:bg-neutral-400 dark:before:bg-white",
+                        ],
+                        content: [
+                          "py-2 px-4 shadow-xl",
+                          "text-black bg-gradient-to-br from-white to-neutral-400",
+                        ],
+                      }}
+                      content={data?.short_description}
+                    >
+                      <p className="line-clamp-3 text-sm leading-relaxed">
+                        {data?.short_description}
+                      </p>
+                    </Tooltip>
+
+                    <ul
+                      dangerouslySetInnerHTML={{
+                        __html: data?.extra_info ?? "",
+                      }}
+                      className="mt-4 list-disc space-y-1 pl-5 text-sm"
                     />
 
-                    <div className="space-y-4">
-                      <p className="font-bold text-xl">
-                        ₫{parseInt(data?.price || "0").toLocaleString("vi-VN")}
-                      </p>
+                    {/* --------- Quantity & Address --------- */}
+                    <div className="grid gap-4">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <Input
+                          {...register("quantity", { valueAsNumber: true })}
+                          label="Số lượng"
+                          min={1}
+                          placeholder="Nhập số lượng"
+                          size="md"
+                          startContent={<ListOrdered />}
+                          type="number"
+                        />
 
-                      <Tooltip content={data?.short_description} size="lg">
-                        <p className="text-sm leading-relaxed line-clamp-3">
-                          {data?.short_description}
-                        </p>
-                      </Tooltip>
+                        <div className="flex flex-col gap-3">
+                          <Autocomplete
+                            className="w-full"
+                            inputValue={addressValue}
+                            isLoading={isSearchingAddress}
+                            label="Địa chỉ giao hàng"
+                            startContent={
+                              <MapPin className="text-muted-foreground" />
+                            }
+                            onInputChange={(v) => setValue("address", v)}
+                            onSelectionChange={handleSelectAddress}
+                          >
+                            {addressOptions.map((o) => (
+                              <AutocompleteItem key={o.key}>
+                                {o.label}
+                              </AutocompleteItem>
+                            ))}
+                          </Autocomplete>
 
-                      <ul
-                        dangerouslySetInnerHTML={{
-                          __html: data?.extra_info || "",
-                        }}
-                        className="text-sm list-disc pl-5 space-y-1 mt-4"
-                      />
-
-                      <div className="grid w-full gap-4 mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <Input
-                            label="Số lượng"
-                            min={1}
-                            placeholder="Nhập số lượng"
-                            size="md"
-                            startContent={<ListOrdered />}
-                            type="number"
-                            {...register("quantity", { valueAsNumber: true })}
-                          />
-
-                          <div className="flex flex-col gap-3">
-                            <Autocomplete
-                              className="w-full"
-                              inputValue={addressValue}
-                              isLoading={isSearchingAddress}
-                              label="Địa chỉ giao hàng"
-                              startContent={
-                                <MapPin className="text-muted-foreground" />
-                              }
-                              onInputChange={(value) =>
-                                setValue("address", value)
-                              }
-                              onSelectionChange={handleSelectAddress}
+                          <Tooltip content="Vị trí chỉ mang tính tương đối">
+                            <Chip
+                              className="cursor-pointer"
+                              color="success"
+                              isDisabled={isGettingCurrentLocation}
+                              variant="faded"
+                              onClick={handleUseCurrentLocation}
                             >
-                              {addressSuggestions.map((item) => (
-                                <AutocompleteItem key={item.key}>
-                                  {item.label}
-                                </AutocompleteItem>
-                              ))}
-                            </Autocomplete>
-
-                            <Tooltip content="Vị trí chỉ mang tính chất tương đối">
-                              <Chip
-                                className="cursor-pointer"
-                                color="success"
-                                isDisabled={isGettingCurrentLocation}
-                                variant="faded"
-                                onClick={handleUseCurrentLocation}
-                              >
-                                {isGettingCurrentLocation
-                                  ? "Đang lấy vị trí..."
-                                  : "📍 Dùng vị trí hiện tại"}
-                              </Chip>
-                            </Tooltip>
-                          </div>
+                              {isGettingCurrentLocation
+                                ? "Đang lấy vị trí..."
+                                : "📍 Dùng vị trí hiện tại"}
+                            </Chip>
+                          </Tooltip>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="flex flex-col sm:flex-row gap-3 w-full mt-4">
-                        <Button
-                          fullWidth
-                          color="secondary"
-                          isLoading={createCartPending}
-                          size="lg"
-                          startContent={<BaggageClaim />}
-                          onPress={() => {
-                            handleSubmit(onAddToCart)();
-                          }}
-                        >
-                          Thêm vào giỏ hàng
-                        </Button>
+                    {/* --------- Actions --------- */}
+                    <div className="mt-4 flex w-full flex-col gap-3 sm:flex-row">
+                      <Button
+                        fullWidth
+                        color="secondary"
+                        isLoading={createCartPending}
+                        size="lg"
+                        startContent={<BaggageClaim />}
+                        onPress={() => handleSubmit(onAddToCart)()}
+                      >
+                        Thêm vào giỏ
+                      </Button>
 
-                        <Button
-                          fullWidth
-                          color="primary"
-                          isLoading={orderNowPending}
-                          size="lg"
-                          startContent={<ShoppingCart />}
-                          onPress={onShowQRModal}
-                        >
-                          Mua ngay
-                        </Button>
-                      </div>
+                      <Button
+                        fullWidth
+                        color="primary"
+                        isLoading={orderNowPending}
+                        size="lg"
+                        startContent={<ShoppingCart />}
+                        onPress={onShowQRModal}
+                      >
+                        Mua ngay
+                      </Button>
                     </div>
                   </div>
+                </div>
 
-                  <Spacer y={5} />
+                <Spacer y={5} />
 
-                  <Accordion variant="bordered">
-                    <AccordionItem key="gallery" title="Hình ảnh khác:">
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                        {data?.gallery.map((img, idx) => (
-                          <Image
-                            key={idx}
-                            alt={`${data?.product_name} ${idx + 1}`}
-                            className="cursor-pointer object-cover transition-transform duration-200 hover:scale-105"
-                            height={200}
-                            src={img}
-                            width={300}
-                            onClick={() => handleImageClick(img)}
-                          />
-                        ))}
-                      </div>
-                    </AccordionItem>
-                  </Accordion>
+                {/* gallery & desc giữ nguyên */}
+                <Accordion defaultExpandedKeys={["gallery"]} variant="bordered">
+                  <AccordionItem key="gallery" title="Hình ảnh khác:">
+                    <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">
+                      {data?.gallery.map((img, i) => (
+                        <Image
+                          key={i}
+                          alt={`${data?.product_name} ${i + 1}`}
+                          className="cursor-pointer object-cover transition-transform duration-200 hover:scale-105"
+                          height={200}
+                          src={img}
+                          width={300}
+                          onClick={() => setZoomedImage(img)}
+                        />
+                      ))}
+                    </div>
+                  </AccordionItem>
+                </Accordion>
 
-                  <Accordion variant="bordered">
-                    <AccordionItem key="desc" title="Mô tả chi tiết:">
-                      <div className="mt-4 text-sm">
-                        {data?.full_description}
-                      </div>
-                    </AccordionItem>
-                  </Accordion>
-                </ModalBody>
-              </>
-            )}
-          </>
+                <Accordion defaultExpandedKeys={["desc"]} variant="bordered">
+                  <AccordionItem key="desc" title="Mô tả chi tiết:">
+                    <div className="mt-4 text-sm">{data?.full_description}</div>
+                  </AccordionItem>
+                </Accordion>
+              </ModalBody>
+            </>
+          )}
         </ModalContent>
       </Modal>
 
-      {/* Zoom ảnh */}
+      {/* ----- Zoom image ----- */}
       {zoomedImage && (
-        <Modal backdrop="blur" isOpen={true} size="4xl" onClose={closeZoom}>
+        <Modal
+          isOpen
+          backdrop="blur"
+          size="4xl"
+          onClose={() => setZoomedImage(null)}
+        >
           <ModalContent>
             <ModalHeader />
             <ModalBody>
               <div className="flex justify-center">
                 <Image
-                  alt="Zoomed Image"
+                  alt="Zoomed"
                   height={768}
                   radius="sm"
                   src={zoomedImage}
@@ -481,7 +504,7 @@ export default function ModalDetailProduct({
         </Modal>
       )}
 
-      {/* Modal thanh toán QR */}
+      {/* ----- QR payment modal ----- */}
       {isQRModalOpen && (
         <ModalConfirmPayment
           handleConfirmCheckout={handleSubmit(onBuyNow)}

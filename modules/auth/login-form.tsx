@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Form, Input, Button, addToast } from "@heroui/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { LogIn } from "lucide-react";
 import Cookies from "js-cookie";
@@ -12,6 +12,7 @@ import { siteConfig } from "@/config/site";
 import PasswordInput from "@/components/password-input";
 import LinkCustom from "@/components/link";
 import { useLoginUser } from "@/hooks/useLoginUser";
+import { sanitizeRedirect } from "@/helpers/sanitize-redirect";
 
 interface LoginFormData {
   username: string;
@@ -20,6 +21,11 @@ interface LoginFormData {
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const redirect = sanitizeRedirect(
+    searchParams.get("redirect") ?? siteConfig.routes.home,
+  );
 
   const { control, handleSubmit, setError } = useForm<LoginFormData>({
     defaultValues: {
@@ -32,26 +38,23 @@ export default function LoginForm() {
     onSuccess: (data) => {
       Cookies.set("token", data.token, {
         path: "/",
-        secure: true,
-        sameSite: "None",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax",
       });
-
-      Cookies.set("expires_in", data.expires_in.toString(), {
+      Cookies.set("expires_in", String(data.expires_in), {
         path: "/",
-        secure: true,
-        sameSite: "None",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax",
       });
-
-      Cookies.set("isLogin", JSON.stringify(true), {
+      Cookies.set("isLogin", "true", {
         path: "/",
-        secure: true,
-        sameSite: "None",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax",
       });
-
-      Cookies.set("user_id", JSON.stringify(data.user.user_id), {
+      Cookies.set("user_id", String(data.user.user_id), {
         path: "/",
-        secure: true,
-        sameSite: "None",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Lax",
       });
 
       addToast({
@@ -60,7 +63,7 @@ export default function LoginForm() {
         color: "success",
       });
 
-      router.replace(siteConfig.routes.home);
+      router.replace(redirect);
     },
 
     onError: (error) => {
@@ -137,7 +140,7 @@ export default function LoginForm() {
         rules={{ required: "Mật khẩu không được để trống" }}
       />
 
-      <div className="flex w-full flex-wrap gap-3 items-center justify-between px-1 py-2">
+      <div className="flex w-full flex-wrap items-center justify-between gap-3 px-1 py-2">
         <LinkCustom className="text-sm" href={siteConfig.routes.forgotPassword}>
           Quên mật khẩu?
         </LinkCustom>

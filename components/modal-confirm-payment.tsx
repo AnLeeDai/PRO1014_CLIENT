@@ -6,24 +6,23 @@ import {
   ModalBody,
   Button,
 } from "@heroui/react";
+import { QrCode, X, CheckCircle } from "lucide-react";
 
 interface IModalConfirmPaymentProps {
   isConfirmModalOpen: boolean;
-  setConfirmModalOpen: (isOpen: boolean) => void;
+  setConfirmModalOpen: (open: boolean) => void;
   userInfo: any;
   orderNowPending: boolean;
   handleConfirmCheckout: () => void;
 }
 
-export default function ModalConfirmPayment(props: IModalConfirmPaymentProps) {
-  const {
-    isConfirmModalOpen,
-    setConfirmModalOpen,
-    userInfo,
-    orderNowPending,
-    handleConfirmCheckout,
-  } = props;
-
+export default function ModalConfirmPayment({
+  isConfirmModalOpen,
+  setConfirmModalOpen,
+  userInfo,
+  orderNowPending,
+  handleConfirmCheckout,
+}: IModalConfirmPaymentProps) {
   return (
     <Modal
       backdrop="blur"
@@ -32,7 +31,10 @@ export default function ModalConfirmPayment(props: IModalConfirmPaymentProps) {
       onClose={() => setConfirmModalOpen(false)}
     >
       <ModalContent>
-        <ModalHeader>Xác nhận thanh toán</ModalHeader>
+        <ModalHeader className="flex items-center gap-2">
+          <QrCode size={20} />
+          Xác nhận thanh toán
+        </ModalHeader>
 
         <ModalBody>
           <Image
@@ -41,10 +43,11 @@ export default function ModalConfirmPayment(props: IModalConfirmPaymentProps) {
             src="/my_qr_code.png"
             width={1280}
           />
-          <p className="text-center mt-4">
-            Quét mã để hoàn tất thanh toán nội dung chuyển khoản là:&nbsp;
+
+          <p className="mt-4 text-center">
+            Quét mã để hoàn tất thanh toán – nội dung chuyển khoản: &nbsp;
             <strong>
-              {userInfo?.user.user_id} - {userInfo?.user.full_name}
+              {userInfo?.user.user_id} – {userInfo?.user.full_name}
             </strong>
           </p>
 
@@ -53,6 +56,7 @@ export default function ModalConfirmPayment(props: IModalConfirmPaymentProps) {
               fullWidth
               color="default"
               size="lg"
+              startContent={<X />}
               variant="flat"
               onPress={() => setConfirmModalOpen(false)}
             >
@@ -64,6 +68,7 @@ export default function ModalConfirmPayment(props: IModalConfirmPaymentProps) {
               color="primary"
               isLoading={orderNowPending}
               size="lg"
+              startContent={<CheckCircle />}
               onPress={handleConfirmCheckout}
             >
               Xác nhận

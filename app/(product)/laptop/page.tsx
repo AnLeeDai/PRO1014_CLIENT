@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Metadata } from "next";
 
 import LaptopContainer from "@/modules/product/laptop-container";
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default function LaptopPage() {
-  return <LaptopContainer />;
+  return (
+    <Suspense>
+      <LaptopContainer />
+    </Suspense>
+  );
 }

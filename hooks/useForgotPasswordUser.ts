@@ -14,6 +14,13 @@ interface ForgotPasswordResponse {
   message: string;
 }
 
+interface ForgotPasswordParams {
+  username: string;
+  email: string;
+  new_password: string;
+  password_confirm: string;
+}
+
 export const useForgotPasswordUser = (
   options?: UseMutationOptions<
     ResponseSuccess<ForgotPasswordResponse>,
@@ -22,8 +29,13 @@ export const useForgotPasswordUser = (
   >,
 ) => {
   return useMutation({
-    mutationFn: ({ username, email, new_password }: ForgotPasswordParams) =>
-      forgotPassword(username, email, new_password),
+    mutationFn: ({
+      username,
+      email,
+      new_password,
+      password_confirm,
+    }: ForgotPasswordParams) =>
+      forgotPassword(username, email, new_password, password_confirm),
     ...options,
   });
 };

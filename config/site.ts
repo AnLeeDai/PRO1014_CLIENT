@@ -15,5 +15,6 @@ export const siteConfig = {
     profile: "/profile",
     cart: "/cart",
     order: "/orders",
+    search: "/search",
   },
 };

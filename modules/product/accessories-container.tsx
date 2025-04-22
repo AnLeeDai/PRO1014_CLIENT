@@ -6,6 +6,8 @@ import { useDebounce } from "use-debounce";
 
 import ProductGrid from "@/components/product-grid";
 import { useProduct } from "@/hooks/useProduct";
+import Forward from "@/components/forward";
+import { siteConfig } from "@/config/site";
 
 const brandList = [
   { key: "all", label: "Tất cả hãng" },
@@ -71,62 +73,65 @@ export default function AccessoriesContainer() {
 
   return (
     <div className="space-y-6 py-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Hãng */}
-        <Select
-          label="Hãng"
-          placeholder="Chọn hãng"
-          selectedKeys={new Set([watchedBrand])}
-          onSelectionChange={(keys) => {
-            const value = Array.from(keys)[0] as string;
-
-            setValue("brand", value);
-            setValue("page", 1);
-          }}
-        >
-          {brandList.map((brand) => (
-            <SelectItem key={brand.key}>{brand.label}</SelectItem>
-          ))}
-        </Select>
-
-        {/* Tìm kiếm */}
-        <Input
-          label="Tìm kiếm"
-          placeholder="Nhập tên phụ kiện..."
-          {...register("search")}
-          onBlur={() => setValue("page", 1)}
-        />
-
-        {/* Giá */}
-        <Select
-          label="Khoảng giá"
-          placeholder="Chọn khoảng giá"
-          selectedKeys={new Set([watchedPrice])}
-          onSelectionChange={(keys) => {
-            const value = Array.from(keys)[0] as string;
-
-            setValue("price", value);
-            setValue("page", 1);
-          }}
-        >
-          {priceList.map((price) => (
-            <SelectItem key={price.key}>{price.label}</SelectItem>
-          ))}
-        </Select>
+      <div className="mb-7">
+        <Forward href={siteConfig.routes.home} label="Quay lại trang chủ" />
       </div>
 
-      <ProductGrid
-        data={{ data: data?.data || [] }}
-        isLoading={isLoading || isFetching}
-      />
+      <div className="grid gap-6 md:grid-cols-[250px_1fr]">
+        <div className="space-y-4">
+          <Input
+            label="Tìm kiếm"
+            placeholder="Nhập tên phụ kiện..."
+            {...register("search")}
+            onBlur={() => setValue("page", 1)}
+          />
 
-      <div className="flex justify-center pt-4">
-        <Pagination
-          showControls
-          page={watchedPage}
-          total={data?.pagination?.total_pages || 1}
-          onChange={(p) => setValue("page", p)}
-        />
+          <Select
+            label="Hãng"
+            selectedKeys={new Set([watchedBrand])}
+            onSelectionChange={(keys) => {
+              const value = Array.from(keys)[0] as string;
+
+              setValue("brand", value);
+              setValue("page", 1);
+            }}
+          >
+            {brandList.map((brand) => (
+              <SelectItem key={brand.key}>{brand.label}</SelectItem>
+            ))}
+          </Select>
+
+          <Select
+            label="Khoảng giá"
+            selectedKeys={new Set([watchedPrice])}
+            onSelectionChange={(keys) => {
+              const value = Array.from(keys)[0] as string;
+
+              setValue("price", value);
+              setValue("page", 1);
+            }}
+          >
+            {priceList.map((price) => (
+              <SelectItem key={price.key}>{price.label}</SelectItem>
+            ))}
+          </Select>
+        </div>
+
+        <div className="space-y-6">
+          <ProductGrid
+            data={{ data: data?.data || [] }}
+            isLoading={isLoading || isFetching}
+          />
+
+          <div className="flex justify-center pt-4">
+            <Pagination
+              showControls
+              page={watchedPage}
+              total={data?.pagination?.total_pages || 1}
+              onChange={(p) => setValue("page", p)}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

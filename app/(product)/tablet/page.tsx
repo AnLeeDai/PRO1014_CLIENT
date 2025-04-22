@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 import TabletContainer from "@/modules/product/tablet-container";
 
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default function TabletPage() {
-  return <TabletContainer />;
+  return (
+    <Suspense>
+      <TabletContainer />
+    </Suspense>
+  );
 }

@@ -15,6 +15,7 @@ interface ForgotPasswordFormData {
   username: string;
   email: string;
   new_password: string;
+  password_confirm: string;
 }
 
 export default function ForgotPasswordForm() {
@@ -25,6 +26,7 @@ export default function ForgotPasswordForm() {
       username: "",
       email: "",
       new_password: "",
+      password_confirm: "",
     },
   });
 
@@ -32,13 +34,12 @@ export default function ForgotPasswordForm() {
     onSuccess: () => {
       addToast({
         title: "Yêu cầu quên mật khẩu thành công",
-        description: "Admin sẽ liên hệ với bạn trong thời gian sớm nhất",
+        description: "Bạn đã đổi mật khẩu thành công.",
         color: "success",
       });
 
       router.replace(siteConfig.routes.home);
     },
-
     onError: (error) => {
       addToast({
         title: "Đã xảy ra sự cố",
@@ -52,23 +53,25 @@ export default function ForgotPasswordForm() {
     let hasError = false;
 
     if (!regexUsername.test(data.username)) {
-      setError("username", {
-        message: "Tên đăng nhập không hợp lệ",
-      });
+      setError("username", { message: "Tên đăng nhập không hợp lệ" });
       hasError = true;
     }
 
     if (!regexEmail.test(data.email)) {
-      setError("email", {
-        message: "Email không hợp lệ",
-      });
+      setError("email", { message: "Email không hợp lệ" });
       hasError = true;
     }
 
     if (!regexPassword.test(data.new_password)) {
       setError("new_password", {
-        message:
-          "Mật khẩu phải có ít nhất 6 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt",
+        message: "Mật khẩu phải gồm chữ hoa, thường, số và ký tự đặc biệt",
+      });
+      hasError = true;
+    }
+
+    if (data.new_password !== data.password_confirm) {
+      setError("password_confirm", {
+        message: "Mật khẩu xác nhận không khớp",
       });
       hasError = true;
     }
@@ -94,7 +97,6 @@ export default function ForgotPasswordForm() {
             errorMessage={fieldState.error?.message}
             isInvalid={fieldState.invalid}
             label="Tên đăng nhập"
-            validationBehavior="aria"
           />
         )}
         rules={{ required: "Tên đăng nhập không được để trống" }}
@@ -111,7 +113,6 @@ export default function ForgotPasswordForm() {
             isInvalid={fieldState.invalid}
             label="Email"
             type="email"
-            validationBehavior="aria"
           />
         )}
         rules={{ required: "Email không được để trống" }}
@@ -127,10 +128,24 @@ export default function ForgotPasswordForm() {
             errorMessage={fieldState.error?.message}
             isInvalid={fieldState.invalid}
             label="Mật khẩu mới"
-            validationBehavior="aria"
           />
         )}
         rules={{ required: "Mật khẩu mới không được để trống" }}
+      />
+
+      <Controller
+        control={control}
+        name="password_confirm"
+        render={({ field, fieldState }) => (
+          <PasswordInput
+            {...field}
+            isRequired
+            errorMessage={fieldState.error?.message}
+            isInvalid={fieldState.invalid}
+            label="Xác nhận mật khẩu"
+          />
+        )}
+        rules={{ required: "Vui lòng nhập lại mật khẩu để xác nhận" }}
       />
 
       <Button

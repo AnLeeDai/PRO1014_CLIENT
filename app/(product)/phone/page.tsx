@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 import PhoneContainer from "@/modules/product/phone-container";
 
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default function PhonePage() {
-  return <PhoneContainer />;
+  return (
+    <Suspense>
+      <PhoneContainer />
+    </Suspense>
+  );
 }
