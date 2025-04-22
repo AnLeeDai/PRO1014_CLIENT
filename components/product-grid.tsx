@@ -91,9 +91,10 @@ function ProductGridInner(
           <Card key={i}>
             <CardHeader className="p-2">
               <Skeleton className="rounded-lg">
-                <div className="h-[250px] rounded-lg bg-default-300" />
+                <div className="h-[320px] rounded-lg bg-default-300" />
               </Skeleton>
             </CardHeader>
+
             <CardBody className="space-y-2 p-2">
               <Skeleton className="h-6 w-3/4 rounded-lg bg-default-300" />
               <Skeleton className="h-6 w-1/2 rounded-lg bg-default-300" />
@@ -121,7 +122,7 @@ function ProductGridInner(
                 isBlurred
                 isZoomed
                 alt={item.product_name}
-                height={200}
+                height={320}
                 src={item.thumbnail}
                 width={500}
               />

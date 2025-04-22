@@ -304,7 +304,7 @@ export default function ModalDetailProduct({
         }}
         isOpen={isOpen}
         scrollBehavior="inside"
-        size="full"
+        size="5xl"
         onClose={onClose}
         onOpenChange={onOpenChange}
       >

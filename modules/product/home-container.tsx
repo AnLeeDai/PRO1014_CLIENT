@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@heroui/input";
+import { useState } from "react";
 
 import Banner from "../../components/banner";
 
@@ -21,6 +22,8 @@ import { useProduct } from "@/hooks/useProduct";
 export default function HomeContainer() {
   const router = useRouter();
 
+  const [keyword, setKeyword] = useState("");
+
   const { data: phoneData, isLoading: phoneLoading } = useProduct(1);
   const { data: tabletData, isLoading: tabletLoading } = useProduct(2);
   const { data: laptopData, isLoading: laptopLoading } = useProduct(3);
@@ -28,7 +31,9 @@ export default function HomeContainer() {
     useProduct(4);
 
   const handlerSearch = () => {
-    router.push(siteConfig.routes.search);
+    if (keyword.trim()) {
+      router.push(`/search/${encodeURIComponent(keyword.trim())}`);
+    }
   };
 
   return (
@@ -38,9 +43,11 @@ export default function HomeContainer() {
         placeholder="Tìm kiếm sản phẩm..."
         size="lg"
         startContent={<Search />}
+        value={keyword}
         onKeyDown={(e) => {
           if (e.key === "Enter") handlerSearch();
         }}
+        onValueChange={setKeyword}
       />
 
       <Banner />
