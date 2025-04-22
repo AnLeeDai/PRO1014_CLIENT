@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Input, Spinner } from "@heroui/react";
+import { Input, Spinner, Pagination } from "@heroui/react";
 import { Search } from "lucide-react";
 
 import ProductGrid from "@/components/product-grid";
@@ -19,18 +19,28 @@ export default function SearchContainer({
 }: SearchContainerProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState(initialKeyword);
+  const [page, setPage] = useState(1);
 
   const {
     data: searchData,
     isLoading,
     isFetching,
-  } = useProduct(undefined, keyword.trim() || undefined);
+  } = useProduct(
+    undefined,
+    keyword.trim() || undefined,
+    undefined,
+    undefined,
+    undefined,
+    page,
+  );
 
   const results = searchData?.data || [];
+  const totalPages = searchData?.pagination?.total_pages || 1;
 
   const handleSearch = () => {
     if (keyword.trim()) {
       router.push(`/search/${encodeURIComponent(keyword.trim())}`);
+      setPage(1);
     }
   };
 
@@ -59,7 +69,7 @@ export default function SearchContainer({
         </div>
       )}
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-6">
         {keyword.trim() === "" && (
           <p className="text-center text-neutral-500">
             Hãy nhập từ khóa để bắt đầu tìm kiếm.
@@ -73,7 +83,17 @@ export default function SearchContainer({
         )}
 
         {keyword.trim() !== "" && results.length > 0 && (
-          <ProductGrid data={{ data: results }} isLoading={false} />
+          <>
+            <ProductGrid data={{ data: results }} isLoading={false} />
+            <div className="flex justify-center pt-4">
+              <Pagination
+                showControls
+                page={page}
+                total={totalPages}
+                onChange={setPage}
+              />
+            </div>
+          </>
         )}
       </div>
     </div>

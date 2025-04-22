@@ -35,17 +35,18 @@ export const forgotPassword = async (
   username: string,
   email: string,
   new_password: string,
+  password_confirm: string,
 ) => {
   const res = await axiosInstance.post("?request=post-forgot-password", {
     username,
     email,
     new_password,
+    password_confirm,
   });
 
   return res.data;
 };
 
-// change password
 export const changePassword = async (data: {
   old_password: string;
   new_password: string;

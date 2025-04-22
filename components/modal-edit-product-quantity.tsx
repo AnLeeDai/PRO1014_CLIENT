@@ -9,7 +9,7 @@ import {
   addToast,
 } from "@heroui/react";
 import { useState, useEffect } from "react";
-import { Package, X, Check } from "lucide-react";
+import { Package, X, Save } from "lucide-react";
 
 import { useUpdateCart } from "@/hooks/useUpdateCart";
 import { useCart } from "@/hooks/useCart";
@@ -108,7 +108,7 @@ export default function ModalEditProductQuantity({
                 color="primary"
                 isLoading={isPending}
                 size="lg"
-                startContent={<Check />}
+                startContent={<Save />}
                 onPress={handleSave}
               >
                 Lưu thay đổi
