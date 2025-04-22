@@ -117,9 +117,7 @@ export default function ModalDetailProduct({
       setIsSearchingAddress(true);
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            debouncedAddress,
-          )}&format=json&addressdetails=1&limit=7&countrycodes=vn`,
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(debouncedAddress)}&format=json&addressdetails=1&limit=7&countrycodes=vn`,
           { signal: controller.signal },
         );
         const json = await res.json();
