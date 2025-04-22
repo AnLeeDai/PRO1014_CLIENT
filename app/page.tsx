@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 import HomeContainer from "@/modules/product/home-container";
 
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <HomeContainer />;
+  return (
+    <Suspense>
+      <HomeContainer />
+    </Suspense>
+  );
 }
