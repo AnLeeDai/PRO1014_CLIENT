@@ -6,12 +6,21 @@ import {
   Image,
   Skeleton,
   Tooltip,
-  useDisclosure,
 } from "@heroui/react";
 import { Eye } from "lucide-react";
-import { useState } from "react";
+import {
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  Ref,
+  useEffect,
+} from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import ModalDetailProduct from "./modal-detail-product";
+
+import { slugify } from "@/helpers/slugify";
+import { siteConfig } from "@/config/site";
 
 interface Product {
   id: number;
@@ -19,80 +28,92 @@ interface Product {
   thumbnail: string;
   price: string;
 }
-
 interface ProductGridProps {
-  data: {
-    data: Product[];
-  };
+  data: { data: Product[] };
   isLoading?: boolean;
 }
 
-export default function ProductGrid({
-  data,
-  isLoading = false,
-}: ProductGridProps) {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [selectedProductId, setSelectedProductId] = useState<
-    number | undefined
-  >();
+function ProductGridInner(
+  { data, isLoading = false }: ProductGridProps,
+  ref: Ref<{ open: (id: number) => void }>,
+) {
+  const router = useRouter();
+  const search = useSearchParams();
+  const urlId = Number(search.get("id"));
 
-  if (!isLoading && data.data.length === 0) {
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<number>();
+
+  useImperativeHandle(ref, () => ({
+    open: (id: number) => {
+      const product = data.data.find((p) => p.id === id);
+
+      if (product) handleViewDetail(product);
+    },
+  }));
+
+  useEffect(() => {
+    if (urlId && !isOpenModal) {
+      const product = data.data.find((p) => p.id === urlId);
+
+      if (product) handleViewDetail(product);
+    }
+  }, [urlId, data.data]);
+
+  const handleViewDetail = (product: Product) => {
+    setSelectedProductId(product.id);
+
+    router.push(
+      `/product-detail/${slugify(product.product_name)}?id=${product.id}`,
+      { scroll: false },
+    );
+
+    setIsOpenModal(true);
+  };
+
+  const handleModalClose = () => {
+    setSelectedProductId(undefined);
+    setIsOpenModal(false);
+    router.push(siteConfig.routes.home, { scroll: false });
+  };
+
+  if (!isLoading && data.data.length === 0)
     return (
-      <div className="text-center py-10 text-lg font-medium">
+      <div className="py-10 text-center text-lg font-medium">
         Chưa có sản phẩm nào
       </div>
     );
-  }
 
-  if (isLoading || data.data.length === 0) {
+  if (isLoading)
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <Card key={`skeleton-${index}`}>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Card key={i}>
             <CardHeader className="p-2">
               <Skeleton className="rounded-lg">
                 <div className="h-[250px] rounded-lg bg-default-300" />
               </Skeleton>
             </CardHeader>
-
-            <CardBody className="p-2 space-y-2">
-              <Skeleton className="rounded-lg">
-                <div className="h-6 rounded-lg bg-default-300 w-3/4" />
-              </Skeleton>
-
-              <Skeleton className="rounded-lg">
-                <div className="h-6 rounded-lg bg-default-300 w-1/2" />
-              </Skeleton>
-
-              <Skeleton className="rounded-lg">
-                <div className="h-8 rounded-lg bg-default-300" />
-              </Skeleton>
+            <CardBody className="space-y-2 p-2">
+              <Skeleton className="h-6 w-3/4 rounded-lg bg-default-300" />
+              <Skeleton className="h-6 w-1/2 rounded-lg bg-default-300" />
+              <Skeleton className="h-8 rounded-lg bg-default-300" />
             </CardBody>
           </Card>
         ))}
       </div>
     );
-  }
-
-  const handleModalClose = () => {
-    setSelectedProductId(undefined);
-  };
-
-  const handleViewDetail = (productId: number | undefined) => {
-    setSelectedProductId(productId);
-    onOpen();
-  };
 
   return (
     <>
       <ModalDetailProduct
-        isOpen={isOpen}
+        isOpen={isOpenModal}
         productId={selectedProductId ?? 0}
         onClose={handleModalClose}
-        onOpenChange={onOpenChange}
+        onOpenChange={setIsOpenModal}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {data.data.map((item) => (
           <Card key={item.id}>
             <CardHeader className="p-2">
@@ -108,12 +129,12 @@ export default function ProductGrid({
 
             <CardBody className="p-2">
               <Tooltip content={item.product_name} size="lg">
-                <h3 className="text-lg font-bold line-clamp-1">
+                <h3 className="line-clamp-1 text-lg font-bold">
                   {item.product_name}
                 </h3>
               </Tooltip>
 
-              <p className="text-lg mt-1">
+              <p className="mt-1 text-lg">
                 ₫{parseInt(item.price).toLocaleString("vi-VN")}
               </p>
 
@@ -122,7 +143,7 @@ export default function ProductGrid({
                 color="primary"
                 size="md"
                 startContent={<Eye />}
-                onPress={() => handleViewDetail(item.id)}
+                onPress={() => handleViewDetail(item)}
               >
                 Xem chi tiết
               </Button>
@@ -133,3 +154,5 @@ export default function ProductGrid({
     </>
   );
 }
+
+export default forwardRef(ProductGridInner);
