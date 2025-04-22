@@ -17,7 +17,13 @@ import {
   Autocomplete,
   AutocompleteItem,
 } from "@heroui/react";
-import { BaggageClaim, ListOrdered, MapPin, ShoppingCart } from "lucide-react";
+import {
+  BaggageClaim,
+  ListOrdered,
+  MapPin,
+  ShoppingCart,
+  Package,
+} from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Cookies from "js-cookie";
@@ -68,13 +74,11 @@ export default function ModalDetailProduct({
   const router = useRouter();
   const token = Cookies.get("token");
 
-  /* ------------ data hooks ------------ */
   const { data: productData, isLoading: productLoading } =
     useProductByID(productId);
   const { refetch: refetchCart } = useCart();
   const { data: userInfo } = useUserInfo();
 
-  /* ------------ RHF ------------ */
   const {
     register,
     handleSubmit,
@@ -291,19 +295,16 @@ export default function ModalDetailProduct({
 
   if (!isOpen) return null;
 
-  /* ------------ render ------------ */
   return (
     <>
-      {/* ----- modal detail ----- */}
       <Modal
         backdrop="blur"
         classNames={{
           header: "border-b-[1px] border-[#292f46]",
-          body: "mt-5 pb-5",
         }}
         isOpen={isOpen}
         scrollBehavior="inside"
-        size="5xl"
+        size="full"
         onClose={onClose}
         onOpenChange={onOpenChange}
       >
@@ -311,12 +312,22 @@ export default function ModalDetailProduct({
           {productLoading ? (
             /*  Skeleton UI  */
             <ModalBody>
-              <Skeleton className="h-6 w-1/2 rounded" />
-              {/* ... giữ nguyên skeleton ... */}
+              <Skeleton className="w-1/2 h-6 rounded" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <Skeleton className="w-full h-[430px] rounded-lg" />
+                <div className="space-y-4">
+                  <Skeleton className="w-1/4 h-6 rounded" />
+                  <Skeleton className="w-full h-24 rounded" />
+                  <Skeleton className="w-1/3 h-6 rounded" />
+                  <Skeleton className="w-1/2 h-6 rounded" />
+                  <Skeleton className="w-full h-12 rounded" />
+                </div>
+              </div>
             </ModalBody>
           ) : (
             <>
               <ModalHeader className="text-xl font-semibold">
+                <Package className="mr-2 inline-block" />
                 {data?.product_name}
               </ModalHeader>
 
@@ -441,7 +452,7 @@ export default function ModalDetailProduct({
                 <Spacer y={5} />
 
                 {/* gallery & desc giữ nguyên */}
-                <Accordion variant="bordered">
+                <Accordion defaultExpandedKeys={["gallery"]} variant="bordered">
                   <AccordionItem key="gallery" title="Hình ảnh khác:">
                     <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">
                       {data?.gallery.map((img, i) => (
@@ -459,7 +470,7 @@ export default function ModalDetailProduct({
                   </AccordionItem>
                 </Accordion>
 
-                <Accordion variant="bordered">
+                <Accordion defaultExpandedKeys={["desc"]} variant="bordered">
                   <AccordionItem key="desc" title="Mô tả chi tiết:">
                     <div className="mt-4 text-sm">{data?.full_description}</div>
                   </AccordionItem>

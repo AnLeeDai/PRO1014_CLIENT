@@ -20,7 +20,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ModalDetailProduct from "./modal-detail-product";
 
 import { slugify } from "@/helpers/slugify";
-import { siteConfig } from "@/config/site";
 
 interface Product {
   id: number;
@@ -74,7 +73,8 @@ function ProductGridInner(
   const handleModalClose = () => {
     setSelectedProductId(undefined);
     setIsOpenModal(false);
-    router.push(siteConfig.routes.home, { scroll: false });
+    // router.push(siteConfig.routes.home, { scroll: false });
+    router.back();
   };
 
   if (!isLoading && data.data.length === 0)
