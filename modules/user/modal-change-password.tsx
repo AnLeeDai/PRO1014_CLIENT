@@ -125,7 +125,8 @@ export default function ModalChangePassword({
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader className="flex flex-col gap-1">
+            <ModalHeader className="flex items-center gap-2">
+              <KeyRound size={20} />
               Thay đổi mật khẩu
             </ModalHeader>
 

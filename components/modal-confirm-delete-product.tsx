@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Modal,
   ModalContent,
@@ -6,6 +7,7 @@ import {
   Button,
   addToast,
 } from "@heroui/react";
+import { AlertTriangle, Trash2, X as CancelIcon } from "lucide-react";
 
 import { useDeleteCart } from "@/hooks/useDeleteCart";
 import { useCart } from "@/hooks/useCart";
@@ -24,7 +26,6 @@ export default function ModalConfirmDeleteProduct(
   props: IModalConfirmDeleteProductProps,
 ) {
   const { isOpenModalDelete, onOpenChangeModalDelete, productInfo } = props;
-
   const { refetch } = useCart();
 
   const { mutate, isPending } = useDeleteCart({
@@ -34,24 +35,19 @@ export default function ModalConfirmDeleteProduct(
         description: `Đã xóa ${productInfo.totalProduct} sản phẩm ${productInfo.productName} khỏi giỏ hàng`,
         color: "success",
       });
-
       refetch();
-
       onOpenChangeModalDelete(false);
     },
-
-    onError: (error) => {
+    onError: (error) =>
       addToast({
         title: "Lỗi khi xóa sản phẩm",
         description: error.message,
         color: "danger",
-      });
-    },
+      }),
   });
 
-  const handleDeleteProduct = () => {
+  const handleDeleteProduct = () =>
     mutate({ product_id: productInfo.product_id });
-  };
 
   return (
     <Modal
@@ -63,7 +59,10 @@ export default function ModalConfirmDeleteProduct(
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader>Xác nhận xóa {productInfo.productName}</ModalHeader>
+            <ModalHeader className="flex items-center gap-2">
+              <AlertTriangle className="text-warning" size={20} />
+              Xác nhận xóa {productInfo.productName}
+            </ModalHeader>
 
             <ModalBody>
               <p className="text-center">
@@ -78,6 +77,7 @@ export default function ModalConfirmDeleteProduct(
                   fullWidth
                   color="default"
                   size="lg"
+                  startContent={<CancelIcon />}
                   variant="flat"
                   onPress={onClose}
                 >
@@ -89,7 +89,8 @@ export default function ModalConfirmDeleteProduct(
                   color="danger"
                   isLoading={isPending}
                   size="lg"
-                  onPress={() => handleDeleteProduct()}
+                  startContent={<Trash2 />}
+                  onPress={handleDeleteProduct}
                 >
                   Xóa
                 </Button>

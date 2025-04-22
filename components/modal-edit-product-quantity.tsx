@@ -8,14 +8,15 @@ import {
   Input,
   addToast,
 } from "@heroui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Package, X, Check } from "lucide-react";
 
 import { useUpdateCart } from "@/hooks/useUpdateCart";
 import { useCart } from "@/hooks/useCart";
 
 interface IModalEditProductQuantityProps {
   isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+  onOpenChange: (open: boolean) => void;
   productInfo: {
     product_id: number;
     productName: string;
@@ -29,8 +30,10 @@ export default function ModalEditProductQuantity({
   productInfo,
 }: IModalEditProductQuantityProps) {
   const { refetch } = useCart();
-
   const [newQuantity, setNewQuantity] = useState<number>(productInfo.quantity);
+
+  /* đồng bộ khi mở lại modal */
+  useEffect(() => setNewQuantity(productInfo.quantity), [productInfo.quantity]);
 
   const { mutate, isPending } = useUpdateCart({
     onSuccess: () => {
@@ -39,17 +42,15 @@ export default function ModalEditProductQuantity({
         description: `Số lượng ${productInfo.productName} đã được cập nhật.`,
         color: "success",
       });
-
       refetch();
       onOpenChange(false);
     },
-    onError: (err) => {
+    onError: (err) =>
       addToast({
         title: "Lỗi",
         description: err.message,
         color: "danger",
-      });
-    },
+      }),
   });
 
   const handleSave = () => {
@@ -62,11 +63,7 @@ export default function ModalEditProductQuantity({
 
       return;
     }
-
-    mutate({
-      product_id: productInfo.product_id,
-      quantity: newQuantity,
-    });
+    mutate({ product_id: productInfo.product_id, quantity: newQuantity });
   };
 
   return (
@@ -79,25 +76,30 @@ export default function ModalEditProductQuantity({
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader>
-              Chỉnh sửa số lượng - {productInfo.productName}
+            <ModalHeader className="flex items-center gap-2">
+              <Package size={20} />
+              Chỉnh sửa số lượng — {productInfo.productName}
             </ModalHeader>
 
             <ModalBody>
-              <div className="space-y-4">
-                <Input
-                  fullWidth
-                  label="Số lượng"
-                  min={1}
-                  type="number"
-                  value={String(newQuantity)}
-                  onChange={(e) => setNewQuantity(Number(e.target.value))}
-                />
-              </div>
+              <Input
+                fullWidth
+                label="Số lượng"
+                min={1}
+                type="number"
+                value={String(newQuantity)}
+                onChange={(e) => setNewQuantity(Number(e.target.value))}
+              />
             </ModalBody>
 
             <ModalFooter>
-              <Button fullWidth variant="flat" onPress={onClose}>
+              <Button
+                fullWidth
+                size="lg"
+                startContent={<X />}
+                variant="flat"
+                onPress={onClose}
+              >
                 Hủy
               </Button>
 
@@ -105,6 +107,8 @@ export default function ModalEditProductQuantity({
                 fullWidth
                 color="primary"
                 isLoading={isPending}
+                size="lg"
+                startContent={<Check />}
                 onPress={handleSave}
               >
                 Lưu thay đổi
