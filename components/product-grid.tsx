@@ -122,9 +122,11 @@ function ProductGridInner(
                 isBlurred
                 isZoomed
                 alt={item.product_name}
+                className="cursor-pointer"
                 height={320}
                 src={item.thumbnail}
                 width={500}
+                onClick={() => handleViewDetail(item)}
               />
             </CardHeader>
 
