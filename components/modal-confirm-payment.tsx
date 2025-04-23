@@ -47,11 +47,11 @@ export default function ModalConfirmPayment({
           <p className="mt-4 text-center">
             Quét mã để hoàn tất thanh toán – nội dung chuyển khoản: &nbsp;
             <strong>
-              {userInfo?.user.user_id} – {userInfo?.user.full_name}
+              {userInfo?.user.full_name} – {userInfo?.user.username}
             </strong>
           </p>
 
-          <div className="mt-4 flex items-center justify-between gap-4">
+          <div className="mt-4 flex items-center justify-between gap-4 mb-4">
             <Button
               fullWidth
               color="default"
