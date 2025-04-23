@@ -34,7 +34,7 @@ export default function ForgotPasswordForm() {
     onSuccess: () => {
       addToast({
         title: "Yêu cầu quên mật khẩu thành công",
-        description: "Bạn đã đổi mật khẩu thành công.",
+        description: "Liên hệ với admin để được hỗ trợ",
         color: "success",
       });
 
