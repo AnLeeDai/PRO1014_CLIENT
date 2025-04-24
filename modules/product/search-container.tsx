@@ -84,7 +84,11 @@ export default function SearchContainer({
 
         {keyword.trim() !== "" && results.length > 0 && (
           <>
-            <ProductGrid data={{ data: results }} isLoading={false} />
+            <ProductGrid
+              data={{ data: results.filter((item) => item.is_active !== 0) }}
+              isLoading={false}
+            />
+
             <div className="flex justify-center pt-4">
               <Pagination
                 showControls

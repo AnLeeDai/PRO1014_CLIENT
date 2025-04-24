@@ -118,7 +118,9 @@ export default function TabletContainer() {
 
         <div className="space-y-6">
           <ProductGrid
-            data={{ data: data?.data || [] }}
+            data={{
+              data: (data?.data || []).filter((item) => item.is_active !== 0),
+            }}
             isLoading={isLoading || isFetching}
           />
 

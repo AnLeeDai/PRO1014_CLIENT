@@ -59,7 +59,11 @@ export default function HomeContainer() {
           title="Điện thoại"
         >
           <ProductGrid
-            data={{ data: phoneData?.data || [] }}
+            data={{
+              data: (phoneData?.data || []).filter(
+                (item) => item.is_active !== 0,
+              ),
+            }}
             isLoading={phoneLoading}
           />
         </Section>
@@ -70,7 +74,11 @@ export default function HomeContainer() {
           title="Máy tính bảng"
         >
           <ProductGrid
-            data={{ data: tabletData?.data || [] }}
+            data={{
+              data: (tabletData?.data || []).filter(
+                (item) => item.is_active !== 0,
+              ),
+            }}
             isLoading={tabletLoading}
           />
         </Section>
@@ -81,7 +89,11 @@ export default function HomeContainer() {
           title="Laptop"
         >
           <ProductGrid
-            data={{ data: laptopData?.data || [] }}
+            data={{
+              data: (laptopData?.data || []).filter(
+                (item) => item.is_active !== 0,
+              ),
+            }}
             isLoading={laptopLoading}
           />
         </Section>
@@ -92,7 +104,11 @@ export default function HomeContainer() {
           title="Phụ kiện"
         >
           <ProductGrid
-            data={{ data: accessoriesData?.data || [] }}
+            data={{
+              data: (accessoriesData?.data || []).filter(
+                (item) => item.is_active !== 0,
+              ),
+            }}
             isLoading={accessoriesLoading}
           />
         </Section>
